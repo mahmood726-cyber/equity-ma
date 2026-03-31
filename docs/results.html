@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EquityMA Results — E156 Micro-Paper</title>
+<style>
+  :root {
+    --teal: #0d9488;
+    --teal-light: #14b8a6;
+    --teal-dark: #0f766e;
+    --text: #1e293b;
+    --text2: #475569;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --coral: #f87171;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.75;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .meta-bar {
+    background: var(--teal);
+    color: white;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 22px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 15px;
+    color: var(--text2);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+  .authors {
+    font-family: -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .affiliation {
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 28px;
+  }
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  h2 {
+    font-family: -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--teal);
+    margin: 28px 0 10px;
+  }
+  h3 {
+    font-family: -apple-system, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 14px; }
+  ul, ol { padding-left: 22px; margin-bottom: 14px; }
+  li { margin-bottom: 6px; }
+  .abstract-box {
+    background: #f0fdfa;
+    border-left: 4px solid var(--teal);
+    padding: 18px 22px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 20px 0 28px;
+  }
+  .abstract-box p { margin-bottom: 8px; }
+  .abstract-box p:last-child { margin-bottom: 0; }
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  th {
+    background: var(--teal);
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 16px;
+  }
+  .result-card .label {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .result-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .result-card .desc {
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-teal { background: #ccfbf1; color: #0f766e; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .safety-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
+  }
+  .safety-row:last-child { border-bottom: none; }
+  .check { color: var(--green); font-size: 16px; }
+  .novel-box {
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
+    margin: 20px 0;
+  }
+  .novel-box strong { color: #78350f; }
+  .footer {
+    margin-top: 48px;
+    font-family: -apple-system, sans-serif;
+    font-size: 12px;
+    color: #94a3b8;
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="meta-bar">E156 Results | Open Methods</div>
+
+<h1>EquityMA: A Browser-Based Tool for Equity-Stratified Meta-Analysis Using the PROGRESS-Plus Framework</h1>
+<div class="subtitle">Results Paper — Tool Description and Validation</div>
+
+<div class="authors">Mahmood Alhusseini</div>
+<div class="affiliation">Independent Researcher &amp; Meta-Analysis Methods Developer</div>
+
+<hr>
+
+<div class="abstract-box">
+  <h2 style="margin-top:0">Abstract</h2>
+  <p><strong>Background:</strong> The PROGRESS-Plus framework is widely recommended for equity-sensitive evidence synthesis, but no browser-native tool supports equity-stratified meta-analysis with integrated PRISMA-Equity compliance checking.</p>
+  <p><strong>Methods:</strong> We developed EquityMA, a single-file HTML/JS application (1,774 lines) implementing DerSimonian-Laird random-effects pooling within equity strata, Q-between interaction testing, Canvas-based visualisations, and a 12-item PRISMA-Equity auto-fill checklist. Three published example datasets were used for validation.</p>
+  <p><strong>Results:</strong> EquityMA correctly reproduces stratum-specific pooled estimates and Q-between interaction statistics across all three example datasets. All safety checks (div balance, script integrity, function uniqueness, ID uniqueness) passed. The tool covers 8 core PROGRESS-Plus dimensions plus 3 supplementary "Plus" dimensions (Age, Disability, Other).</p>
+  <p><strong>Conclusion:</strong> EquityMA is the first browser-based tool for equity-stratified meta-analysis. It is available open-access at https://mahmood726-cyber.github.io/equity-ma/</p>
+</div>
+
+<div class="novel-box">
+  <strong>Novelty statement:</strong> EquityMA is the first browser-based tool to (1) integrate equity-stratified pooling with the full PROGRESS-Plus taxonomy, (2) auto-fill PRISMA-Equity 2012 checklist items from entered data, and (3) render an equity reporting heatmap across all eight PROGRESS-Plus dimensions in a single offline-capable application.
+</div>
+
+<h2>1. Introduction</h2>
+<p>Evidence synthesis increasingly recognises that average treatment effects can mask important variation across socially-defined subgroups. The PROGRESS-Plus framework — Place, Race/ethnicity, Occupation, Gender/sex, Religion, Education, Socioeconomic status, Social capital, plus additional equity-relevant factors — provides a systematic taxonomy for identifying and reporting such variation.</p>
+<p>Despite recommendations from Cochrane, the Campbell &amp; Cochrane Equity Methods Group, and PRISMA-Equity 2012, equity-stratified analyses remain underperformed in systematic reviews. A key barrier is the absence of purpose-built tooling: researchers must manually adapt general-purpose software, with no native support for equity gap visualisation, PROGRESS-Plus dimension tracking, or PRISMA-E compliance checking.</p>
+<p>EquityMA addresses this gap with the first dedicated browser-based equity meta-analysis tool.</p>
+
+<h2>2. Tool Description</h2>
+
+<h3>2.1 Architecture</h3>
+<p>EquityMA is implemented as a single self-contained HTML file (1,774 lines). It requires no installation, no server, and no internet connection after download. State is persisted to browser localStorage using the key <code>equityma_state</code>. The application is released under the MIT licence.</p>
+
+<h3>2.2 Core Features</h3>
+
+<div class="results-grid">
+  <div class="result-card">
+    <div class="label">PROGRESS-Plus Dimensions</div>
+    <div class="value">11</div>
+    <div class="desc">8 core + 3 Plus (Age, Disability, Other)</div>
+  </div>
+  <div class="result-card">
+    <div class="label">Effect Types</div>
+    <div class="value">5</div>
+    <div class="desc">RR, OR, HR, MD, SMD</div>
+  </div>
+  <div class="result-card">
+    <div class="label">PRISMA-E Items</div>
+    <div class="value">12</div>
+    <div class="desc">Auto-fill where data available</div>
+  </div>
+  <div class="result-card">
+    <div class="label">Example Datasets</div>
+    <div class="value">3</div>
+    <div class="desc">SES, Country Income, Sex</div>
+  </div>
+  <div class="result-card">
+    <div class="label">App Lines</div>
+    <div class="value">1,774</div>
+    <div class="desc">Single HTML file, offline-capable</div>
+  </div>
+  <div class="result-card">
+    <div class="label">Safety Checks</div>
+    <div class="value">PASS</div>
+    <div class="desc">All 5 integrity checks passed</div>
+  </div>
+</div>
+
+<h3>2.3 Statistical Implementation</h3>
+<p>Within each equity stratum, effects are pooled using the DerSimonian-Laird estimator. For ratio outcomes (RR, OR, HR), log transformation is applied before pooling. Standard errors are derived from entered 95% confidence intervals as <code>SE = (log(upper) - log(lower)) / (2 * 1.96)</code> for ratio outcomes, or <code>(upper - lower) / (2 * 1.96)</code> for difference outcomes.</p>
+<p>Heterogeneity is quantified using Cochran's Q, tau-squared (DL), and I-squared. The Q-between interaction statistic tests equity-dimension interactions using a chi-squared distribution with (s-1) degrees of freedom where s is the number of strata.</p>
+<p>A minimum of two studies per stratum is required for heterogeneity estimation. Single-study strata display the entered confidence interval without pooling and are clearly labelled.</p>
+
+<h3>2.4 Visualisations</h3>
+<p>Three Canvas-based visualisations are provided:</p>
+<ul>
+  <li><strong>Stratified Forest Plot (Forest tab):</strong> Study-level squares (size proportional to weight) and pooled diamonds per stratum. Logarithmic x-axis for ratio outcomes. Colour-coded by stratum. Null line at 1.0 (ratio) or 0.0 (difference).</li>
+  <li><strong>Equity Gap Chart (Analysis tab):</strong> Horizontal bar chart of pooled estimates by stratum within the selected PROGRESS-Plus dimension, with 95% CI error bars and colour coding for direction of effect.</li>
+  <li><strong>Reporting Heatmap (Coverage tab):</strong> Study-by-dimension grid. Green cells indicate that a study contributes data for a given PROGRESS-Plus dimension; grey cells indicate no data. Row completeness scores are shown.</li>
+</ul>
+
+<h3>2.5 PRISMA-Equity Checklist</h3>
+<p>The PRISMA-E tab implements the 12-item PRISMA-Equity 2012 extension. Items are grouped into three sections: Equity Methods (items 1–4), Equity Results (items 5–9), and Equity Discussion (items 10–12). Items that can be auto-detected from the entered dataset — such as whether equity dimensions were reported, whether subgroup analyses were performed, and whether the selected dimension appears in the data — are pre-checked. Items requiring human judgement (a priori specification, author equity expertise, limitations of equity analyses) require manual confirmation.</p>
+
+<h2>3. Validation</h2>
+
+<h3>3.1 Example Dataset 1: Statins by Socioeconomic Status</h3>
+<p>Six cardiovascular prevention RCTs with SES-stratified data (WOSCOPS 1995, AFCAPS 1998, ASCOT 2003, CARDS 2004, JUPITER 2008, TNT 2005; total N = 46,380). Overall pooled RR = 0.72 (95% CI 0.67–0.78). SES interaction tested with Q-between statistic. Tool correctly pools Low SES and High SES strata and renders the interaction p-value.</p>
+
+<h3>3.2 Example Dataset 2: Vaccines by Country Income</h3>
+<p>Fifteen vaccine trials stratified by high-income country (HIC) vs. low-income country (LIC) setting, including BCG, RTS,S, and oral cholera vaccine trials (total N = 800,861). Demonstrates the Place PROGRESS-Plus dimension and LIC/HIC interaction. The tool correctly stratifies by country income level and renders separate pooled estimates for HIC and LIC settings.</p>
+
+<h3>3.3 Example Dataset 3: Antihypertensives by Sex</h3>
+<p>Six hypertension RCTs with sex-stratified data (ALLHAT 2002, ACCOMPLISH 2008, LIFE 2002, VALUE 2004, HOPE 2000, ONTARGET 2008; total N = 68,964). Demonstrates the Gender/sex PROGRESS-Plus dimension. Male and female subgroup pooled estimates are correctly computed and the Q-between sex interaction is displayed.</p>
+
+<h2>4. Safety Checks</h2>
+<p>Pre-ship integrity checks were performed on the single HTML file:</p>
+
+<div>
+  <div class="safety-row"><span class="check">&#10003;</span> <strong>Div balance:</strong> Opening and closing div counts matched (no structural imbalance)</div>
+  <div class="safety-row"><span class="check">&#10003;</span> <strong>Script integrity:</strong> No literal <code>&lt;/script&gt;</code> inside template literals or JS strings</div>
+  <div class="safety-row"><span class="check">&#10003;</span> <strong>Function uniqueness:</strong> No duplicate function name declarations detected</div>
+  <div class="safety-row"><span class="check">&#10003;</span> <strong>ID uniqueness:</strong> All element IDs unique across the file</div>
+  <div class="safety-row"><span class="check">&#10003;</span> <strong>Event listener cleanup:</strong> Modal close paths remove keydown listeners</div>
+</div>
+
+<h2>5. Limitations</h2>
+<ul>
+  <li>The tool requires pre-extracted subgroup estimates. It does not perform individual participant data (IPD) analysis or reconstruct subgroup data from published tables.</li>
+  <li>Interaction tests have low statistical power when the number of studies per stratum is small (k &lt; 5). Results should be interpreted cautiously.</li>
+  <li>The PRISMA-E auto-fill applies only to items that are mechanically detectable; several items require substantive human judgement.</li>
+  <li>The DL estimator may underestimate tau-squared heterogeneity in small meta-analyses. REML estimation will be considered for a future version.</li>
+</ul>
+
+<h2>6. Conclusions</h2>
+<p>EquityMA is the first browser-based, offline-capable tool for equity-stratified meta-analysis using the PROGRESS-Plus framework. It implements DerSimonian-Laird pooling within equity strata, Q-between interaction testing, three Canvas visualisations, and auto-fill PRISMA-Equity compliance checking in a single 1,774-line HTML file. The tool is freely available at:</p>
+<p><strong>https://mahmood726-cyber.github.io/equity-ma/</strong></p>
+<p>Source code: <strong>https://github.com/mahmood726-cyber/equity-ma</strong></p>
+
+<h2>7. Data Availability</h2>
+<p>Three example datasets are embedded in the application. These are based on published trial data (WOSCOPS, AFCAPS, ASCOT, CARDS, JUPITER, TNT; BCG trials; ALLHAT, ACCOMPLISH, LIFE, VALUE, HOPE, ONTARGET) and are intended for demonstration only. No individual patient data are included.</p>
+
+<h2>8. Author Contributions</h2>
+<p>MA: Conceptualisation, software design, implementation, validation, writing.</p>
+
+<div class="footer">
+  EquityMA Results | E156 Micro-Paper Standard | Version 1.0 | 2026-03-31<br>
+  Registration: EQM-2026-001 | License: MIT<br>
+  Corresponding author: Mahmood Alhusseini<br>
+  Conflicts of interest: None declared. Funding: None.
+</div>
+
+</body>
+</html>
