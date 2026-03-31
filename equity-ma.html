@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EquityMA — Equity-Stratified Meta-Analysis Tool</title>
+<style>
+:root {
+  --teal: #0d9488;
+  --teal-light: #14b8a6;
+  --teal-dark: #0f766e;
+  --coral: #f87171;
+  --coral-dark: #ef4444;
+  --amber: #f59e0b;
+  --green: #10b981;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text2: #64748b;
+  --text3: #94a3b8;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+body.dark {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --border: #475569;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+a { color: var(--teal); text-decoration: none; }
+
+/* Header */
+#app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
+.header-brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--teal), var(--teal-light)); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; }
+.brand-icon svg { width: 20px; height: 20px; fill: white; }
+.brand-text h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+.brand-text p { font-size: 11px; color: var(--text2); }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+.btn-primary { background: var(--teal); color: white; border-color: var(--teal); }
+.btn-primary:hover { background: var(--teal-dark); }
+.btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { background: var(--surface2); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger { background: var(--coral); color: white; border-color: var(--coral); }
+.btn-danger:hover { background: var(--coral-dark); }
+.btn-ghost { background: transparent; color: var(--text2); border-color: transparent; }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+#dark-toggle { background: none; border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; cursor: pointer; color: var(--text2); font-size: 16px; }
+
+/* Tabs */
+#tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; gap: 0; }
+.tab-btn { padding: 12px 18px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.tab-btn:hover { color: var(--teal); }
+.tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+/* Layout */
+#main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.card-title { font-size: 15px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.card-title .icon { width: 20px; height: 20px; }
+
+/* Forms */
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 12px; font-weight: 500; color: var(--text2); }
+.form-group input, .form-group select, .form-group textarea { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.15s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+.form-group.flex1 { flex: 1; min-width: 100px; }
+.form-group.w80 input { width: 80px; }
+.form-group.w120 input { width: 120px; }
+.form-group.w200 { width: 200px; }
+
+/* Studies table */
+#studies-table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--surface2); color: var(--text2); font-weight: 600; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(13,148,136,0.03); }
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-teal { background: rgba(13,148,136,0.12); color: var(--teal-dark); }
+.badge-amber { background: rgba(245,158,11,0.12); color: #92400e; }
+.badge-coral { background: rgba(248,113,113,0.12); color: #991b1b; }
+.badge-green { background: rgba(16,185,129,0.12); color: #065f46; }
+
+/* Subgroup tags */
+.sg-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); margin: 2px; }
+.sg-tag .dim { font-weight: 600; color: var(--teal); }
+
+/* Progress bar */
+.progress-wrap { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--teal); border-radius: 4px; transition: width 0.3s; }
+.progress-bar.amber { background: var(--amber); }
+.progress-bar.coral { background: var(--coral); }
+
+/* Traffic light */
+.tl-green { color: var(--green); font-weight: 600; }
+.tl-amber { color: var(--amber); font-weight: 600; }
+.tl-red { color: var(--coral-dark); font-weight: 600; }
+
+/* Equity analysis grid */
+.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .analysis-grid { grid-template-columns: 1fr; } }
+.canvas-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.canvas-wrap canvas { display: block; width: 100%; }
+.canvas-label { font-size: 12px; font-weight: 600; color: var(--text2); padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+
+/* Stats cards row */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-card { flex: 1; min-width: 150px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.stat-card .stat-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .stat-value { font-size: 22px; font-weight: 700; color: var(--text); margin: 4px 0; }
+.stat-card .stat-sub { font-size: 11px; color: var(--text3); }
+
+/* PRISMA checklist */
+.checklist-section { margin-bottom: 20px; }
+.checklist-section-title { font-size: 13px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--teal); }
+.checklist-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; transition: background 0.1s; }
+.checklist-item:hover { background: var(--surface2); }
+.checklist-item.checked { background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); }
+.checklist-item input[type="checkbox"] { margin-top: 2px; accent-color: var(--teal); width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; }
+.checklist-item-body { flex: 1; }
+.checklist-item-body .item-id { font-size: 11px; font-weight: 700; color: var(--teal); }
+.checklist-item-body .item-text { font-size: 13px; color: var(--text); font-weight: 500; }
+.checklist-item-body .item-guide { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.auto-filled { border-left: 3px solid var(--teal); }
+
+/* Radar canvas */
+#radar-canvas-wrap { display: flex; justify-content: center; }
+
+/* Tooltip */
+.tooltip-box { position: fixed; background: var(--text); color: var(--surface); font-size: 12px; padding: 6px 10px; border-radius: 6px; pointer-events: none; z-index: 1000; max-width: 220px; line-height: 1.4; white-space: pre-wrap; display: none; }
+
+/* Notification */
+.notif { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: var(--surface); padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.notif.show { opacity: 1; }
+
+/* CSV paste area */
+#csv-paste { width: 100%; height: 100px; font-family: monospace; font-size: 12px; resize: vertical; }
+
+/* Section dividers */
+.section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+/* Dimension selector */
+.dim-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.dim-pill { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 2px solid var(--border); background: var(--surface); color: var(--text2); transition: all 0.15s; }
+.dim-pill:hover { border-color: var(--teal); color: var(--teal); }
+.dim-pill.active { border-color: var(--teal); background: rgba(13,148,136,0.1); color: var(--teal); }
+
+/* Interpretation box */
+.interp-box { background: rgba(13,148,136,0.07); border-left: 4px solid var(--teal); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; font-size: 13px; color: var(--text); margin-top: 10px; }
+.interp-box .interp-label { font-size: 11px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+/* Export cards */
+.export-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.export-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; }
+.export-card .export-icon { font-size: 32px; margin-bottom: 10px; }
+.export-card .export-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.export-card .export-desc { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+
+/* Heatmap */
+.heatmap-wrap { overflow-x: auto; }
+
+/* Responsive */
+@media print {
+  #app-header, #tab-nav, .btn, .header-actions { display: none !important; }
+  .tab-panel { display: block !important; }
+  body { background: white; color: black; }
+}
+</style>
+</head>
+<body>
+
+<div id="tooltip-box" class="tooltip-box"></div>
+<div id="notif" class="notif"></div>
+
+<!-- Header -->
+<header id="app-header">
+  <div class="header-brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    </div>
+    <div class="brand-text">
+      <h1>EquityMA</h1>
+      <p>Equity-Stratified Meta-Analysis Tool · PROGRESS-Plus Framework</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" onclick="loadExample(0)">Example: Sex</button>
+    <button class="btn btn-secondary btn-sm" onclick="loadExample(1)">Example: SES</button>
+    <button class="btn btn-secondary btn-sm" onclick="loadExample(2)">Example: LIC/HIC</button>
+    <button class="btn btn-secondary btn-sm" onclick="clearAllData()">Clear</button>
+    <button id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">&#9790;</button>
+  </div>
+</header>
+
+<!-- Tab navigation -->
+<nav id="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('data')" id="tab-btn-data">Study Data</button>
+  <button class="tab-btn" onclick="switchTab('analysis')" id="tab-btn-analysis">Equity Analysis</button>
+  <button class="tab-btn" onclick="switchTab('prisma')" id="tab-btn-prisma">PRISMA-E Checklist</button>
+  <button class="tab-btn" onclick="switchTab('export')" id="tab-btn-export">Export</button>
+</nav>
+
+<div id="main-content">
+
+<!-- ============================================================ TAB 1: DATA ENTRY ============================================================ -->
+<div class="tab-panel active" id="panel-data">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Add Study</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="toggleCsvPane()">Paste CSV</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex1"><label>Study Name</label><input id="inp-study-name" placeholder="Author Year" type="text"></div>
+      <div class="form-group w80"><label>Year</label><input id="inp-study-year" placeholder="2020" type="number" min="1900" max="2100"></div>
+      <div class="form-group"><label>Effect Type</label>
+        <select id="inp-effect-type">
+          <option value="RR">RR</option>
+          <option value="OR">OR</option>
+          <option value="HR">HR</option>
+          <option value="MD">MD</option>
+          <option value="SMD">SMD</option>
+        </select>
+      </div>
+      <div class="form-group w80"><label>Effect</label><input id="inp-effect" placeholder="0.85" type="number" step="any"></div>
+      <div class="form-group w80"><label>Lower CI</label><input id="inp-lower" placeholder="0.72" type="number" step="any"></div>
+      <div class="form-group w80"><label>Upper CI</label><input id="inp-upper" placeholder="1.01" type="number" step="any"></div>
+      <div class="form-group w80"><label>N (opt)</label><input id="inp-n" placeholder="320" type="number" min="0"></div>
+      <div class="form-group" style="align-self:flex-end;">
+        <button class="btn btn-primary" onclick="addStudy()">Add Study</button>
+      </div>
+    </div>
+    <!-- Subgroup entry for new study -->
+    <div id="subgroup-entry-area" style="border-top:1px solid var(--border);padding-top:14px;margin-top:6px;">
+      <div class="section-title" style="margin-top:0;">Subgroup Data (optional — add after entering study details)</div>
+      <div id="pending-subgroups"></div>
+      <div class="form-row" id="sg-add-row">
+        <div class="form-group"><label>PROGRESS-Plus Dimension</label>
+          <select id="inp-sg-dim">
+            <option value="">-- Select Dimension --</option>
+            <option value="Place">Place of Residence</option>
+            <option value="Race">Race/Ethnicity/Culture</option>
+            <option value="Occupation">Occupation</option>
+            <option value="Gender">Gender/Sex</option>
+            <option value="Religion">Religion</option>
+            <option value="Education">Education</option>
+            <option value="SES">Socioeconomic Status</option>
+            <option value="Social">Social Capital</option>
+            <option value="Age">Age</option>
+            <option value="Disability">Disability</option>
+            <option value="Other">Other (Plus)</option>
+          </select>
+        </div>
+        <div class="form-group flex1"><label>Subgroup Label</label><input id="inp-sg-label" placeholder="e.g. Female" type="text"></div>
+        <div class="form-group w80"><label>Effect</label><input id="inp-sg-effect" placeholder="0.79" type="number" step="any"></div>
+        <div class="form-group w80"><label>Lower CI</label><input id="inp-sg-lower" placeholder="0.63" type="number" step="any"></div>
+        <div class="form-group w80"><label>Upper CI</label><input id="inp-sg-upper" placeholder="0.98" type="number" step="any"></div>
+        <div class="form-group w80"><label>n</label><input id="inp-sg-n" placeholder="160" type="number" min="0"></div>
+        <div class="form-group" style="align-self:flex-end;">
+          <button class="btn btn-secondary" onclick="addPendingSubgroup()">+ Add Subgroup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV paste area -->
+  <div class="card" id="csv-pane" style="display:none;">
+    <div class="card-header">
+      <div class="card-title">Paste CSV Data</div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px;">
+      Format: <code>study,year,effect_type,effect,lower,upper,n,dimension,subgroup_label,sg_effect,sg_lower,sg_upper,sg_n</code><br>
+      For studies without subgroups, leave dimension onwards blank. For multiple subgroups, repeat the study row.
+    </p>
+    <textarea id="csv-paste" class="form-group" placeholder="Smith 2020,2020,RR,0.85,0.72,1.01,320,Gender,Female,0.79,0.63,0.98,160&#10;Smith 2020,2020,RR,0.85,0.72,1.01,320,Gender,Male,0.92,0.74,1.14,160"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-primary" onclick="importCsv()">Import CSV</button>
+      <button class="btn btn-secondary" onclick="toggleCsvPane()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Studies list -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Studies (<span id="study-count">0</span>)</div>
+      <div style="font-size:12px;color:var(--text2);" id="study-summary"></div>
+    </div>
+    <div id="studies-table-wrap">
+      <table id="studies-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Study</th>
+            <th>Year</th>
+            <th>Type</th>
+            <th>Effect (95% CI)</th>
+            <th>N</th>
+            <th>Subgroups</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studies-tbody"></tbody>
+      </table>
+      <div id="no-studies-msg" style="text-align:center;padding:30px;color:var(--text2);font-size:13px;">
+        No studies added yet. Use the form above or load an example.
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS coverage summary -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">PROGRESS-Plus Coverage</div>
+      <span style="font-size:12px;color:var(--text2);">Reporting completeness across dimensions</span>
+    </div>
+    <div id="progress-coverage-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
+  </div>
+
+</div><!-- /panel-data -->
+
+
+<!-- ============================================================ TAB 2: EQUITY ANALYSIS ============================================================ -->
+<div class="tab-panel" id="panel-analysis">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Select PROGRESS-Plus Dimension</div>
+    </div>
+    <div class="dim-pills" id="dim-pills-analysis"></div>
+  </div>
+
+  <div id="analysis-content">
+    <div style="text-align:center;padding:40px;color:var(--text2);">
+      Add studies with subgroup data, then select a dimension above to analyze.
+    </div>
+  </div>
+
+</div><!-- /panel-analysis -->
+
+
+<!-- ============================================================ TAB 3: PRISMA-E CHECKLIST ============================================================ -->
+<div class="tab-panel" id="panel-prisma">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">PRISMA-Equity 2012 Checklist</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="prisma-pct-label" style="font-size:13px;font-weight:600;color:var(--teal);">0%</span>
+        <button class="btn btn-secondary btn-sm" onclick="exportPrisma()">Export Checklist</button>
+        <button class="btn btn-secondary btn-sm" onclick="autoFillPrisma()">Auto-fill from Data</button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;">
+        <span>Completion</span>
+        <span id="prisma-progress-text">0 / 27 items</span>
+      </div>
+      <div class="progress-wrap" style="height:12px;">
+        <div class="progress-bar" id="prisma-progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="prisma-checklist-body"></div>
+  </div>
+</div><!-- /panel-prisma -->
+
+
+<!-- ============================================================ TAB 4: EXPORT ============================================================ -->
+<div class="tab-panel" id="panel-export">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Export Options</div>
+    </div>
+    <div class="export-grid">
+      <div class="export-card">
+        <div class="export-icon">&#128196;</div>
+        <div class="export-title">Download HTML Report</div>
+        <div class="export-desc">Full equity analysis report with all plots and interpretation</div>
+        <button class="btn btn-primary" onclick="exportHtmlReport()">Download Report</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">&#128202;</div>
+        <div class="export-title">Download CSV Data</div>
+        <div class="export-desc">All study data and subgroup data as CSV</div>
+        <button class="btn btn-secondary" onclick="exportCsvData()">Download CSV</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">&#9989;</div>
+        <div class="export-title">PRISMA-E Checklist</div>
+        <div class="export-desc">Export completion status as formatted text</div>
+        <button class="btn btn-secondary" onclick="exportPrisma()">Export Checklist</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">&#128247;</div>
+        <div class="export-title">Save Forest Plot</div>
+        <div class="export-desc">Download current stratified forest plot as PNG</div>
+        <button class="btn btn-secondary" onclick="saveForestPng()">Save PNG</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">&#128444;</div>
+        <div class="export-title">Save Equity Gap Plot</div>
+        <div class="export-desc">Download equity gap chart as PNG</div>
+        <button class="btn btn-secondary" onclick="saveGapPng()">Save PNG</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">&#128438;</div>
+        <div class="export-title">Print View</div>
+        <div class="export-desc">Open print-friendly view with all sections</div>
+        <button class="btn btn-secondary" onclick="window.print()">Print</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /panel-export -->
+
+</div><!-- /main-content -->
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+var state = {
+  studies: [],        // [{id, name, year, effectType, effect, lower, upper, n, subgroups:[{dim,label,effect,lower,upper,n}]}]
+  prismaChecked: {},  // {itemId: bool}
+  selectedDim: null,
+  darkMode: false
+};
+
+var pendingSubgroups = [];  // subgroups staged before study is added
+
+// ================================================================
+// CONSTANTS
+// ================================================================
+var DIMS = ['Place','Race','Occupation','Gender','Religion','Education','SES','Social','Age','Disability','Other'];
+var DIM_LABELS = {
+  Place:'Place of Residence', Race:'Race/Ethnicity/Culture', Occupation:'Occupation',
+  Gender:'Gender/Sex', Religion:'Religion', Education:'Education',
+  SES:'Socioeconomic Status', Social:'Social Capital', Age:'Age',
+  Disability:'Disability', Other:'Other (Plus)'
+};
+var DIM_COLORS = {
+  Place:'#0d9488', Race:'#8b5cf6', Occupation:'#f59e0b', Gender:'#ec4899',
+  Religion:'#06b6d4', Education:'#10b981', SES:'#f97316', Social:'#6366f1',
+  Age:'#84cc16', Disability:'#e11d48', Other:'#94a3b8'
+};
+
+// PRISMA-E 2012 items
+var PRISMA_ITEMS = [
+  {id:'T1', section:'Title', text:'Identify the report as a systematic review with consideration of health equity', guide:'Include term such as "equity", "disparities", or "PROGRESS-Plus" in title'},
+  {id:'A1', section:'Abstract', text:'State that equity-relevant populations, interventions or outcomes were considered', guide:'Structured abstract should include equity-relevant terms'},
+  {id:'A2', section:'Abstract', text:'Summarize equity-related findings', guide:'Report effects by equity-relevant subgroup if available'},
+  {id:'I1', section:'Introduction', text:'Describe the equity-relevant research question', guide:'Justify why equity considerations are important for this topic'},
+  {id:'I2', section:'Introduction', text:'Identify equity-relevant population characteristics (PROGRESS-Plus)', guide:'List the PROGRESS-Plus factors addressed in the review'},
+  {id:'M1', section:'Methods', text:'Describe search strategy to identify equity-relevant studies', guide:'Were equity-relevant terms included in the search?'},
+  {id:'M2', section:'Methods', text:'Describe eligibility criteria related to equity', guide:'Were equity-relevant populations included or excluded?'},
+  {id:'M3', section:'Methods', text:'Describe how PROGRESS-Plus characteristics were extracted', guide:'Was data extraction form designed to capture subgroup data?'},
+  {id:'M4', section:'Methods', text:'Describe methods for assessing equity-relevant risk of bias', guide:'Was subgroup reporting completeness assessed?'},
+  {id:'M5', section:'Methods', text:'Describe methods for synthesizing equity-relevant data', guide:'Interaction tests, subgroup meta-analyses, narrative synthesis'},
+  {id:'M6', section:'Methods', text:'Describe how absolute effects were calculated for equity-relevant groups', guide:'Baseline risks should differ by subgroup'},
+  {id:'M7', section:'Methods', text:'State whether GRADE or similar approach used for equity-relevant outcomes', guide:'Certainty of evidence may differ by subgroup'},
+  {id:'R1', section:'Results', text:'Report flow of studies with equity-relevant data', guide:'PRISMA flow diagram should indicate equity-relevant studies'},
+  {id:'R2', section:'Results', text:'Report PROGRESS-Plus characteristics of included studies', guide:'Table of characteristics should include PROGRESS-Plus factors'},
+  {id:'R3', section:'Results', text:'Report completeness of equity-relevant data across studies', guide:'What % of studies reported each PROGRESS-Plus dimension?'},
+  {id:'R4', section:'Results', text:'Report equity-relevant risk of bias assessment', guide:'Selective subgroup reporting is a bias concern'},
+  {id:'R5', section:'Results', text:'Report disaggregated data for PROGRESS-Plus subgroups', guide:'Present effects by subgroup with CIs'},
+  {id:'R6', section:'Results', text:'Report interaction tests for differential effects by subgroup', guide:'Include Q_between, df, and p-value'},
+  {id:'R7', section:'Results', text:'Report absolute differences between equity-relevant groups', guide:'Risk difference or NNT by subgroup when baseline risk differs'},
+  {id:'R8', section:'Results', text:'Report certainty of evidence for equity-relevant subgroups', guide:'GRADE ratings may differ between high/low SES groups'},
+  {id:'D1', section:'Discussion', text:'Interpret results in light of equity considerations', guide:'Are effect differences clinically meaningful for equity?'},
+  {id:'D2', section:'Discussion', text:'Discuss limitations of the equity analysis', guide:'Missing data, small subgroups, post-hoc subgroup analyses'},
+  {id:'D3', section:'Discussion', text:'Discuss generalizability to equity-relevant populations', guide:'Were marginalized groups adequately represented?'},
+  {id:'D4', section:'Discussion', text:'Discuss implications for reducing inequities', guide:'Policy recommendations should address differential effects'},
+  {id:'D5', section:'Discussion', text:'Discuss implications for health equity research', guide:'What future research is needed to address evidence gaps?'},
+  {id:'C1', section:'Conclusion', text:'State overall conclusions in relation to equity', guide:'Do findings suggest equitable, inequitable, or uncertain effects?'},
+  {id:'F1', section:'Funding', text:'Describe funding sources and role of funders for equity components', guide:'Conflicts of interest may affect equity-relevant reporting'}
+];
+
+// ================================================================
+// PERSISTENCE
+// ================================================================
+function saveState() {
+  try { localStorage.setItem('equityma_state_v1', JSON.stringify({studies:state.studies,prismaChecked:state.prismaChecked,darkMode:state.darkMode})); } catch(e){}
+}
+function loadState() {
+  try {
+    var s = localStorage.getItem('equityma_state_v1');
+    if (s) {
+      var d = JSON.parse(s);
+      if (d.studies) state.studies = d.studies;
+      if (d.prismaChecked) state.prismaChecked = d.prismaChecked;
+      if (d.darkMode) { state.darkMode = true; document.body.classList.add('dark'); }
+    }
+  } catch(e){}
+}
+
+// ================================================================
+// UI HELPERS
+// ================================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-btn-'+name).classList.add('active');
+  if (name === 'analysis') renderAnalysis();
+  if (name === 'prisma') renderPrisma();
+}
+
+function toggleDark() {
+  state.darkMode = !state.darkMode;
+  document.body.classList.toggle('dark', state.darkMode);
+  saveState();
+}
+
+function showNotif(msg) {
+  var n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(function(){ n.classList.remove('show'); }, 2500);
+}
+
+function toggleCsvPane() {
+  var p = document.getElementById('csv-pane');
+  p.style.display = p.style.display === 'none' ? '' : 'none';
+}
+
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmtEffect(e, lo, hi) {
+  if (e == null) return '—';
+  return e.toFixed(2) + ' (' + lo.toFixed(2) + '–' + hi.toFixed(2) + ')';
+}
+
+// ================================================================
+// STUDY MANAGEMENT
+// ================================================================
+var studyIdCounter = 1;
+
+function addStudy() {
+  var name = document.getElementById('inp-study-name').value.trim();
+  var year = parseInt(document.getElementById('inp-study-year').value) || null;
+  var effectType = document.getElementById('inp-effect-type').value;
+  var effect = parseFloat(document.getElementById('inp-effect').value);
+  var lower = parseFloat(document.getElementById('inp-lower').value);
+  var upper = parseFloat(document.getElementById('inp-upper').value);
+  var n = parseInt(document.getElementById('inp-n').value) || null;
+
+  if (!name) { showNotif('Enter a study name'); return; }
+  if (isNaN(effect) || isNaN(lower) || isNaN(upper)) { showNotif('Enter effect and CI values'); return; }
+
+  var study = {
+    id: studyIdCounter++,
+    name: name, year: year, effectType: effectType,
+    effect: effect, lower: lower, upper: upper, n: n,
+    subgroups: pendingSubgroups.slice()
+  };
+  state.studies.push(study);
+  pendingSubgroups = [];
+  renderPendingSubgroups();
+
+  // Clear fields
+  ['inp-study-name','inp-study-year','inp-effect','inp-lower','inp-upper','inp-n'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+
+  saveState();
+  renderStudiesTable();
+  renderCoverage();
+  showNotif('Study added: ' + name);
+}
+
+function addPendingSubgroup() {
+  var dim = document.getElementById('inp-sg-dim').value;
+  var label = document.getElementById('inp-sg-label').value.trim();
+  var effect = parseFloat(document.getElementById('inp-sg-effect').value);
+  var lower = parseFloat(document.getElementById('inp-sg-lower').value);
+  var upper = parseFloat(document.getElementById('inp-sg-upper').value);
+  var n = parseInt(document.getElementById('inp-sg-n').value) || null;
+
+  if (!dim) { showNotif('Select a dimension'); return; }
+  if (!label) { showNotif('Enter a subgroup label'); return; }
+  if (isNaN(effect) || isNaN(lower) || isNaN(upper)) { showNotif('Enter subgroup effect and CI'); return; }
+
+  pendingSubgroups.push({dim:dim, label:label, effect:effect, lower:lower, upper:upper, n:n});
+  ['inp-sg-label','inp-sg-effect','inp-sg-lower','inp-sg-upper','inp-sg-n'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  renderPendingSubgroups();
+}
+
+function renderPendingSubgroups() {
+  var el = document.getElementById('pending-subgroups');
+  if (pendingSubgroups.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = pendingSubgroups.map(function(sg, i){
+    return '<span class="sg-tag"><span class="dim">' + escHtml(sg.dim) + '</span> ' + escHtml(sg.label) +
+           ' ' + sg.effect.toFixed(2) + ' (' + sg.lower.toFixed(2) + '–' + sg.upper.toFixed(2) + ')' +
+           ' <span style="cursor:pointer;color:var(--coral-dark)" onclick="removePendingSg('+i+')">&#x2715;</span></span>';
+  }).join('');
+}
+
+function removePendingSg(i) {
+  pendingSubgroups.splice(i, 1);
+  renderPendingSubgroups();
+}
+
+function deleteStudy(id) {
+  state.studies = state.studies.filter(function(s){ return s.id !== id; });
+  saveState();
+  renderStudiesTable();
+  renderCoverage();
+}
+
+function renderStudiesTable() {
+  var tbody = document.getElementById('studies-tbody');
+  var noMsg = document.getElementById('no-studies-msg');
+  var count = document.getElementById('study-count');
+  count.textContent = state.studies.length;
+
+  if (state.studies.length === 0) {
+    tbody.innerHTML = '';
+    noMsg.style.display = '';
+    document.getElementById('study-summary').textContent = '';
+    return;
+  }
+  noMsg.style.display = 'none';
+
+  // Summary
+  var dims = {};
+  state.studies.forEach(function(s){
+    s.subgroups.forEach(function(sg){ dims[sg.dim] = (dims[sg.dim]||0)+1; });
+  });
+  var dimList = Object.keys(dims).map(function(d){ return DIM_LABELS[d]||d; });
+  document.getElementById('study-summary').textContent = dimList.length ? 'Dimensions: ' + dimList.join(', ') : 'No subgroup data yet';
+
+  tbody.innerHTML = state.studies.map(function(s, i){
+    var sgTags = '';
+    var dimsSeen = {};
+    s.subgroups.forEach(function(sg){
+      if (!dimsSeen[sg.dim]) {
+        dimsSeen[sg.dim] = [];
+      }
+      dimsSeen[sg.dim].push(sg.label);
+    });
+    Object.keys(dimsSeen).forEach(function(d){
+      sgTags += '<span class="sg-tag"><span class="dim">' + escHtml(d) + '</span> ' + dimsSeen[d].map(escHtml).join(', ') + '</span>';
+    });
+
+    return '<tr>' +
+      '<td>' + (i+1) + '</td>' +
+      '<td style="font-weight:500">' + escHtml(s.name) + '</td>' +
+      '<td>' + (s.year||'—') + '</td>' +
+      '<td><span class="badge badge-teal">' + escHtml(s.effectType) + '</span></td>' +
+      '<td style="font-family:monospace;white-space:nowrap">' + fmtEffect(s.effect, s.lower, s.upper) + '</td>' +
+      '<td>' + (s.n||'—') + '</td>' +
+      '<td>' + (sgTags || '<span style="color:var(--text3)">None</span>') + '</td>' +
+      '<td><button class="btn btn-ghost btn-sm" onclick="deleteStudy(' + s.id + ')">&#x2715;</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderCoverage() {
+  var el = document.getElementById('progress-coverage-grid');
+  var total = state.studies.length;
+  if (total === 0) { el.innerHTML = '<span style="color:var(--text2);font-size:13px;">No studies yet.</span>'; return; }
+
+  el.innerHTML = DIMS.map(function(dim){
+    var count = state.studies.filter(function(s){
+      return s.subgroups.some(function(sg){ return sg.dim === dim; });
+    }).length;
+    var pct = Math.round(count/total*100);
+    var barClass = pct >= 75 ? '' : pct >= 50 ? 'amber' : 'coral';
+    var tl = pct >= 75 ? 'tl-green' : pct >= 50 ? 'tl-amber' : 'tl-red';
+    return '<div class="stat-card">' +
+      '<div class="stat-label">' + escHtml(DIM_LABELS[dim]) + '</div>' +
+      '<div class="stat-value" style="font-size:18px"><span class="' + tl + '">' + pct + '%</span></div>' +
+      '<div style="margin-top:6px;"><div class="progress-wrap"><div class="progress-bar ' + barClass + '" style="width:' + pct + '%"></div></div></div>' +
+      '<div class="stat-sub">' + count + ' / ' + total + ' studies</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ================================================================
+// CSV IMPORT
+// ================================================================
+function importCsv() {
+  var raw = document.getElementById('csv-paste').value.trim();
+  if (!raw) { showNotif('Paste some CSV data first'); return; }
+  var lines = raw.split('\n');
+  var added = 0;
+  var studyMap = {};
+
+  lines.forEach(function(line){
+    line = line.trim();
+    if (!line) return;
+    var parts = line.split(',');
+    if (parts.length < 4) return;
+    var name = parts[0].trim();
+    var year = parseInt(parts[1]) || null;
+    var effectType = (parts[2]||'RR').trim();
+    var effect = parseFloat(parts[3]);
+    var lower = parseFloat(parts[4]);
+    var upper = parseFloat(parts[5]);
+    var n = parseInt(parts[6]) || null;
+    var dim = (parts[7]||'').trim();
+    var sgLabel = (parts[8]||'').trim();
+    var sgEffect = parseFloat(parts[9]);
+    var sgLower = parseFloat(parts[10]);
+    var sgUpper = parseFloat(parts[11]);
+    var sgN = parseInt(parts[12]) || null;
+
+    if (!name || isNaN(effect)) return;
+
+    if (!studyMap[name]) {
+      studyMap[name] = {id:studyIdCounter++, name:name, year:year, effectType:effectType, effect:effect, lower:lower, upper:upper, n:n, subgroups:[]};
+      added++;
+    }
+    if (dim && sgLabel && !isNaN(sgEffect)) {
+      studyMap[name].subgroups.push({dim:dim, label:sgLabel, effect:sgEffect, lower:sgLower, upper:sgUpper, n:sgN});
+    }
+  });
+
+  Object.values(studyMap).forEach(function(s){ state.studies.push(s); });
+  saveState();
+  renderStudiesTable();
+  renderCoverage();
+  document.getElementById('csv-paste').value = '';
+  toggleCsvPane();
+  showNotif('Imported ' + added + ' studies');
+}
+
+// ================================================================
+// STATISTICAL METHODS
+// ================================================================
+function isRatioMeasure(effectType) {
+  return ['RR','OR','HR'].indexOf(effectType) >= 0;
+}
+
+function pooledEffects(studies, effectType) {
+  // DerSimonian-Laird random effects
+  if (studies.length === 0) return null;
+  var ratio = isRatioMeasure(effectType);
+  var ys = studies.map(function(s){ return ratio ? Math.log(s.effect) : s.effect; });
+  var vis = studies.map(function(s){
+    var se = ratio ? (Math.log(s.upper) - Math.log(s.lower))/(2*1.96) : (s.upper - s.lower)/(2*1.96);
+    return se*se;
+  });
+  return dlMeta(ys, vis, effectType);
+}
+
+function dlMeta(ys, vis, effectType) {
+  var k = ys.length;
+  if (k === 0) return null;
+  if (k === 1) {
+    var ratio1 = isRatioMeasure(effectType);
+    var e = ratio1 ? Math.exp(ys[0]) : ys[0];
+    var se1 = Math.sqrt(vis[0]);
+    var lo = ratio1 ? Math.exp(ys[0]-1.96*se1) : ys[0]-1.96*se1;
+    var hi = ratio1 ? Math.exp(ys[0]+1.96*se1) : ys[0]+1.96*se1;
+    return {effect:e, lower:lo, upper:hi, tau2:0, I2:0, Q:0, df:0, pQ:1, k:1, weights:[1]};
+  }
+
+  // Fixed-effects
+  var ws = vis.map(function(v){ return 1/v; });
+  var W = ws.reduce(function(a,b){return a+b;},0);
+  var W2 = ws.reduce(function(a,b){return a+b*b;},0);
+  var thetaFE = ws.reduce(function(acc,w,i){return acc+w*ys[i];},0)/W;
+  var Q = ws.reduce(function(acc,w,i){ return acc+w*(ys[i]-thetaFE)*(ys[i]-thetaFE); },0);
+  var df = k-1;
+  var pQ = 1 - chi2cdf(Q, df);
+
+  // DL tau2
+  var tau2 = Math.max(0, (Q-df)/(W - W2/W));
+
+  // RE weights
+  var wsRE = vis.map(function(v){ return 1/(v+tau2); });
+  var WRE = wsRE.reduce(function(a,b){return a+b;},0);
+  var thetaRE = wsRE.reduce(function(acc,w,i){return acc+w*ys[i];},0)/WRE;
+  var seRE = Math.sqrt(1/WRE);
+  var I2 = Math.max(0, (Q-df)/Q*100);
+
+  var ratio = isRatioMeasure(effectType);
+  var effect = ratio ? Math.exp(thetaRE) : thetaRE;
+  var lower = ratio ? Math.exp(thetaRE-1.96*seRE) : thetaRE-1.96*seRE;
+  var upper = ratio ? Math.exp(thetaRE+1.96*seRE) : thetaRE+1.96*seRE;
+
+  // Weights as pct
+  var wSum = wsRE.reduce(function(a,b){return a+b;},0);
+  var weights = wsRE.map(function(w){return w/wSum*100;});
+
+  return {effect:effect, lower:lower, upper:upper, tau2:tau2, I2:I2, Q:Q, df:df, pQ:pQ, k:k, weights:weights, thetaRE:thetaRE, seRE:seRE};
+}
+
+function interactionTest(subgroupResults, effectType) {
+  // Q_between = Q_total_RE - sum(Q_within)
+  if (subgroupResults.length < 2) return null;
+  var allY = []; var allV = [];
+  var Qwithin = 0;
+  subgroupResults.forEach(function(sgr){
+    sgr.studies.forEach(function(s){
+      var ratio = isRatioMeasure(effectType);
+      var y = ratio ? Math.log(s.effect) : s.effect;
+      var se = ratio ? (Math.log(s.upper) - Math.log(s.lower))/(2*1.96) : (s.upper - s.lower)/(2*1.96);
+      allY.push(y); allV.push(se*se);
+    });
+    if (sgr.pool) Qwithin += sgr.pool.Q;
+  });
+
+  // Overall Q
+  var overall = dlMeta(allY, allV, effectType);
+  var Qtotal = overall ? overall.Q : 0;
+  var Qbetween = Qtotal - Qwithin;
+  var dfBetween = subgroupResults.length - 1;
+  var pBetween = 1 - chi2cdf(Math.max(0, Qbetween), dfBetween);
+
+  // Ratio/difference of effects
+  var pools = subgroupResults.map(function(sgr){ return sgr.pool; }).filter(Boolean);
+  var ratio = isRatioMeasure(effectType);
+  var effectRatio = null;
+  var effectRatioCILo = null;
+  var effectRatioCIHi = null;
+  if (pools.length === 2) {
+    if (ratio) {
+      var logRatio = pools[0].thetaRE - pools[1].thetaRE;
+      var seRatio = Math.sqrt(pools[0].seRE*pools[0].seRE + pools[1].seRE*pools[1].seRE);
+      effectRatio = Math.exp(logRatio);
+      effectRatioCILo = Math.exp(logRatio - 1.96*seRatio);
+      effectRatioCIHi = Math.exp(logRatio + 1.96*seRatio);
+    } else {
+      var diff = pools[0].thetaRE - pools[1].thetaRE;
+      var seDiff = Math.sqrt(pools[0].seRE*pools[0].seRE + pools[1].seRE*pools[1].seRE);
+      effectRatio = diff;
+      effectRatioCILo = diff - 1.96*seDiff;
+      effectRatioCIHi = diff + 1.96*seDiff;
+    }
+  }
+
+  return {Qbetween:Math.max(0,Qbetween), dfBetween:dfBetween, pBetween:pBetween, effectRatio:effectRatio, effectRatioCILo:effectRatioCILo, effectRatioCIHi:effectRatioCIHi};
+}
+
+function chi2cdf(x, df) {
+  if (x <= 0) return 0;
+  return gammaInc(df/2, x/2);
+}
+
+function gammaInc(a, x) {
+  // regularized lower incomplete gamma via series
+  if (x < 0) return 0;
+  if (x === 0) return 0;
+  var MAX_ITER = 200;
+  var eps = 1e-10;
+  // Use series for x < a+1, continued fraction otherwise
+  if (x < a+1) {
+    var sum = 1/a; var term = 1/a;
+    for (var i=1; i<=MAX_ITER; i++) {
+      term *= x/(a+i);
+      sum += term;
+      if (Math.abs(term) < eps*Math.abs(sum)) break;
+    }
+    return sum * Math.exp(-x + a*Math.log(x) - logGamma(a));
+  } else {
+    // Lentz continued fraction for upper incomplete gamma
+    var fpmin = 1e-300;
+    var b = x+1-a; var c = 1/fpmin; var d = 1/b; var h = d;
+    for (var i2=1; i2<=MAX_ITER; i2++) {
+      var an = -i2*(i2-a);
+      b += 2;
+      d = an*d+b; if (Math.abs(d)<fpmin) d=fpmin;
+      c = b+an/c; if (Math.abs(c)<fpmin) c=fpmin;
+      d = 1/d; var del=d*c; h*=del;
+      if (Math.abs(del-1) < eps) break;
+    }
+    return 1 - Math.exp(-x+a*Math.log(x)-logGamma(a))*h;
+  }
+}
+
+function logGamma(z) {
+  var c = [76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  var y=z; var x=z; var tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp); var ser=1.000000000190015;
+  for (var j=0;j<6;j++){y++;ser+=c[j]/y;}
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+
+function normalCDF(x) {
+  var t = 1/(1+0.2316419*Math.abs(x));
+  var d = 0.3989422820*Math.exp(-x*x/2);
+  var p = d*t*(0.3193815+t*(-0.3565638+t*(1.7814779+t*(-1.8212560+t*1.3302744))));
+  return x>=0 ? 1-p : p;
+}
+
+// ================================================================
+// ANALYSIS RENDERING
+// ================================================================
+function renderAnalysis() {
+  var dims = getAvailableDims();
+  var pillsEl = document.getElementById('dim-pills-analysis');
+  if (dims.length === 0) {
+    pillsEl.innerHTML = '<span style="color:var(--text2);font-size:13px;">No dimensions available. Add studies with subgroup data.</span>';
+    document.getElementById('analysis-content').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);">Add studies with subgroup data, then select a dimension to analyze.</div>';
+    return;
+  }
+  pillsEl.innerHTML = dims.map(function(d){
+    var active = state.selectedDim === d ? ' active' : '';
+    return '<button class="dim-pill' + active + '" onclick="selectDim(\'' + d + '\')" style="border-color:' + DIM_COLORS[d] + (active?';background:'+DIM_COLORS[d]+'22;color:'+DIM_COLORS[d]:'')+'">' + escHtml(DIM_LABELS[d]) + '</button>';
+  }).join('');
+
+  if (state.selectedDim && dims.indexOf(state.selectedDim) >= 0) {
+    renderDimAnalysis(state.selectedDim);
+  } else {
+    state.selectedDim = dims[0];
+    renderDimAnalysis(dims[0]);
+    renderAnalysis(); // re-render pills with correct active state
+  }
+}
+
+function selectDim(dim) {
+  state.selectedDim = dim;
+  renderAnalysis();
+}
+
+function getAvailableDims() {
+  var set = {};
+  state.studies.forEach(function(s){
+    s.subgroups.forEach(function(sg){ set[sg.dim] = true; });
+  });
+  return DIMS.filter(function(d){ return set[d]; });
+}
+
+function renderDimAnalysis(dim) {
+  var container = document.getElementById('analysis-content');
+
+  // Get all labels for this dim
+  var labelSet = {};
+  state.studies.forEach(function(s){
+    s.subgroups.forEach(function(sg){ if (sg.dim === dim) labelSet[sg.label] = true; });
+  });
+  var labels = Object.keys(labelSet);
+  if (labels.length === 0) { container.innerHTML = ''; return; }
+
+  // Build subgroup study lists
+  var effectType = state.studies[0] ? state.studies[0].effectType : 'RR';
+  var subgroupResults = labels.map(function(lbl){
+    var studies = state.studies.filter(function(s){
+      return s.subgroups.some(function(sg){ return sg.dim === dim && sg.label === lbl; });
+    }).map(function(s){
+      var sg = s.subgroups.find(function(sg){ return sg.dim === dim && sg.label === lbl; });
+      return {name:s.name, year:s.year, effect:sg.effect, lower:sg.lower, upper:sg.upper, n:sg.n};
+    });
+    var pool = pooledEffects(studies, effectType);
+    return {label:lbl, studies:studies, pool:pool};
+  });
+
+  var overall = pooledEffects(state.studies.map(function(s){return s;}), effectType);
+  var interaction = interactionTest(subgroupResults, effectType);
+  var reportingPct = Math.round(state.studies.filter(function(s){ return s.subgroups.some(function(sg){return sg.dim===dim;}); }).length / state.studies.length * 100);
+
+  // Stats row
+  var statsHtml = '<div class="stats-row">' +
+    '<div class="stat-card"><div class="stat-label">Studies with Data</div><div class="stat-value">' +
+    state.studies.filter(function(s){return s.subgroups.some(function(sg){return sg.dim===dim;});}).length + ' / ' + state.studies.length + '</div><div class="stat-sub">Reporting completeness: ' + reportingPct + '%</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Subgroups</div><div class="stat-value">' + labels.length + '</div><div class="stat-sub">' + labels.map(escHtml).join(', ') + '</div></div>' +
+    (interaction ? '<div class="stat-card"><div class="stat-label">Interaction P</div><div class="stat-value ' + (interaction.pBetween < 0.05 ? 'tl-red' : 'tl-green') + '">' + interaction.pBetween.toFixed(3) + '</div><div class="stat-sub">Q<sub>between</sub> = ' + interaction.Qbetween.toFixed(2) + ' (df=' + interaction.dfBetween + ')</div></div>' : '') +
+    (overall ? '<div class="stat-card"><div class="stat-label">Overall Effect</div><div class="stat-value" style="font-size:16px">' + overall.effect.toFixed(2) + '</div><div class="stat-sub">' + overall.lower.toFixed(2) + '–' + overall.upper.toFixed(2) + ' | I²=' + overall.I2.toFixed(0) + '%</div></div>' : '') +
+  '</div>';
+
+  // Interpretation
+  var interp = '';
+  if (interaction && labels.length >= 2) {
+    var sig = interaction.pBetween < 0.05;
+    var ratioStr = '';
+    if (interaction.effectRatio !== null) {
+      var isRatio = isRatioMeasure(effectType);
+      ratioStr = isRatio ?
+        ' Ratio of effects: ' + interaction.effectRatio.toFixed(2) + ' (95% CI: ' + interaction.effectRatioCILo.toFixed(2) + '–' + interaction.effectRatioCIHi.toFixed(2) + ').' :
+        ' Difference in effects: ' + interaction.effectRatio.toFixed(2) + ' (95% CI: ' + interaction.effectRatioCILo.toFixed(2) + '–' + interaction.effectRatioCIHi.toFixed(2) + ').';
+    }
+    interp = '<div class="interp-box"><div class="interp-label">Interpretation</div>' +
+      'Evidence suggests <strong>' + (sig ? 'a statistically significant' : 'no statistically significant') + '</strong> difference in treatment effect between ' +
+      labels.map(function(l){return '<em>'+escHtml(l)+'</em>';}).join(' and ') +
+      ' (Q<sub>between</sub> = ' + interaction.Qbetween.toFixed(2) + ', df = ' + interaction.dfBetween + ', p = ' + interaction.pBetween.toFixed(3) + ').' +
+      ratioStr +
+      (reportingPct < 75 ? ' <strong>Note:</strong> Only ' + reportingPct + '% of studies reported ' + DIM_LABELS[dim] + ' data — interpret with caution.' : '') +
+    '</div>';
+  }
+
+  container.innerHTML = statsHtml +
+    '<div class="analysis-grid">' +
+      '<div><div class="canvas-label">Overall Forest Plot</div><canvas id="canvas-overall" width="560" height="' + (40+state.studies.length*28+60) + '"></canvas></div>' +
+      '<div><div class="canvas-label">Stratified Forest Plot — ' + escHtml(DIM_LABELS[dim]) + '</div><canvas id="canvas-stratified" width="560" height="' + (40 + subgroupResults.reduce(function(acc,sgr){return acc+sgr.studies.length*28+50;},0) + 60) + '"></canvas></div>' +
+      '<div><div class="canvas-label">Equity Gap Plot</div><canvas id="canvas-gap" width="560" height="' + (80+labels.length*50+60) + '"></canvas></div>' +
+      '<div><div class="canvas-label">Reporting Heatmap</div><canvas id="canvas-heatmap" width="560" height="' + (40+state.studies.length*28+60) + '"></canvas></div>' +
+    '</div>' +
+    interp;
+
+  // Draw after DOM is updated
+  setTimeout(function(){
+    drawOverallForest('canvas-overall', state.studies, overall, effectType);
+    drawStratifiedForest('canvas-stratified', subgroupResults, effectType, dim);
+    drawGapPlot('canvas-gap', subgroupResults, interaction, effectType, labels);
+    drawHeatmap('canvas-heatmap', state.studies);
+  }, 10);
+}
+
+// ================================================================
+// CANVAS DRAWING
+// ================================================================
+function getThemeColors() {
+  var dark = document.body.classList.contains('dark');
+  return {
+    bg: dark ? '#1e293b' : '#ffffff',
+    text: dark ? '#f1f5f9' : '#1e293b',
+    text2: dark ? '#94a3b8' : '#64748b',
+    border: dark ? '#475569' : '#e2e8f0',
+    teal: '#0d9488',
+    coral: '#f87171',
+    amber: '#f59e0b',
+    grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
+  };
+}
+
+function setupCanvas(id) {
+  var canvas = document.getElementById(id);
+  if (!canvas) return null;
+  var wrap = canvas.parentElement;
+  var W = wrap.clientWidth || 560;
+  canvas.width = W;
+  var ctx = canvas.getContext('2d');
+  var tc = getThemeColors();
+  ctx.fillStyle = tc.bg;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  return {canvas:canvas, ctx:ctx, W:canvas.width, H:canvas.height, tc:tc};
+}
+
+function drawOverallForest(id, studies, overall, effectType) {
+  var obj = setupCanvas(id);
+  if (!obj || !studies.length) return;
+  var ctx = obj.ctx; var W = obj.W; var H = obj.H; var tc = obj.tc;
+  var ratio = isRatioMeasure(effectType);
+
+  var margin = {l:160, r:60, t:40, b:60};
+  var plotW = W - margin.l - margin.r;
+  var rowH = 28;
+
+  // Collect all values to set axis
+  var allVals = [];
+  studies.forEach(function(s){ allVals.push(s.lower, s.upper); });
+  if (overall) allVals.push(overall.lower, overall.upper);
+  var axMin = Math.min.apply(null, allVals);
+  var axMax = Math.max.apply(null, allVals);
+  if (ratio) { axMin = Math.min(axMin, 0.5); axMax = Math.max(axMax, 2.0); }
+  else { axMin = Math.min(axMin, -1); axMax = Math.max(axMax, 1); }
+
+  function xPos(v) {
+    return margin.l + (v - axMin)/(axMax - axMin)*plotW;
+  }
+
+  // Null line
+  var nullVal = ratio ? 1 : 0;
+  var nullX = xPos(nullVal);
+  ctx.strokeStyle = tc.border;
+  ctx.setLineDash([4,4]);
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(nullX, margin.t); ctx.lineTo(nullX, H-margin.b); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw studies
+  studies.forEach(function(s, i){
+    var y = margin.t + i*rowH + rowH/2;
+    var xL = xPos(s.lower); var xR = xPos(s.upper); var xE = xPos(s.effect);
+    var size = 4;
+
+    // CI line
+    ctx.strokeStyle = tc.teal;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xL, y); ctx.lineTo(xR, y); ctx.stroke();
+    // Serifs
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xL,y-4); ctx.lineTo(xL,y+4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xR,y-4); ctx.lineTo(xR,y+4); ctx.stroke();
+    // Point
+    ctx.fillStyle = tc.teal;
+    ctx.beginPath(); ctx.rect(xE-size/2, y-size/2, size, size); ctx.fill();
+
+    // Label
+    ctx.fillStyle = tc.text;
+    ctx.font = '12px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(s.name, margin.l-8, y+4);
+
+    // Effect value
+    ctx.textAlign = 'left';
+    ctx.fillStyle = tc.text2;
+    ctx.font = '11px monospace';
+    ctx.fillText(s.effect.toFixed(2), W-margin.r+4, y+4);
+  });
+
+  // Overall diamond
+  if (overall) {
+    var yi = margin.t + studies.length*rowH + 14;
+    var xL = xPos(overall.lower); var xR = xPos(overall.upper); var xE = xPos(overall.effect);
+    var dH = 9;
+    ctx.fillStyle = '#0f766e';
+    ctx.beginPath();
+    ctx.moveTo(xE, yi-dH); ctx.lineTo(xR, yi); ctx.lineTo(xE, yi+dH); ctx.lineTo(xL, yi); ctx.closePath();
+    ctx.fill();
+
+    // Separator line
+    ctx.strokeStyle = tc.border;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(margin.l, margin.t+studies.length*rowH+3); ctx.lineTo(W-margin.r, margin.t+studies.length*rowH+3); ctx.stroke();
+
+    ctx.fillStyle = tc.text;
+    ctx.font = 'bold 12px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Overall (' + effectType + ')', margin.l-8, yi+4);
+    ctx.textAlign = 'left';
+    ctx.font = '11px monospace';
+    ctx.fillStyle = tc.text2;
+    ctx.fillText(overall.effect.toFixed(2), W-margin.r+4, yi+4);
+  }
+
+  // Axis
+  var tickVals = axisTickVals(axMin, axMax, ratio);
+  ctx.fillStyle = tc.text2;
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  tickVals.forEach(function(v){
+    var x = xPos(v);
+    ctx.strokeStyle = tc.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, margin.t); ctx.lineTo(x, H-margin.b); ctx.stroke();
+    ctx.fillStyle = tc.text2;
+    ctx.fillText(ratio ? v.toFixed(2) : v.toFixed(1), x, H-margin.b+16);
+  });
+
+  // Axis label
+  ctx.fillStyle = tc.text2;
+  ctx.font = '12px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(effectType + (ratio ? ' (log scale axis)' : ''), margin.l + plotW/2, H-margin.b+34);
+  ctx.fillText('Favors treatment', margin.l+20, H-margin.b+16);
+  ctx.fillText('Favors control', W-margin.r-20, H-margin.b+16);
+
+  // Title
+  ctx.fillStyle = tc.text;
+  ctx.font = 'bold 13px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Forest Plot — All Studies (n=' + studies.length + ')', margin.l, 20);
+}
+
+function axisTickVals(min, max, ratio) {
+  if (ratio) {
+    var candidates = [0.1,0.2,0.25,0.33,0.5,0.67,0.75,1.0,1.25,1.5,2.0,3.0,4.0,5.0];
+    return candidates.filter(function(v){return v>=min && v<=max;});
+  } else {
+    var range = max-min;
+    var step = Math.pow(10, Math.floor(Math.log10(range/5)));
+    var ticks = [];
+    var start = Math.ceil(min/step)*step;
+    for (var v=start; v<=max+step*0.001; v+=step) ticks.push(Math.round(v*1000)/1000);
+    return ticks;
+  }
+}
+
+function drawStratifiedForest(id, subgroupResults, effectType, dim) {
+  var obj = setupCanvas(id);
+  if (!obj) return;
+  var ctx = obj.ctx; var W = obj.W; var tc = obj.tc;
+  var ratio = isRatioMeasure(effectType);
+
+  var margin = {l:150, r:60, t:40, b:60};
+  var plotW = W - margin.l - margin.r;
+  var rowH = 28;
+
+  // Compute canvas height
+  var totalRows = subgroupResults.reduce(function(acc,sgr){return acc+sgr.studies.length+2;}, 0);
+  var H = margin.t + totalRows*rowH + margin.b + 20;
+  obj.canvas.height = H;
+  ctx.fillStyle = tc.bg; ctx.fillRect(0,0,W,H);
+
+  // Axis range
+  var allVals = [];
+  subgroupResults.forEach(function(sgr){
+    sgr.studies.forEach(function(s){ allVals.push(s.lower, s.upper); });
+    if (sgr.pool) allVals.push(sgr.pool.lower, sgr.pool.upper);
+  });
+  if (!allVals.length) return;
+  var axMin = Math.min.apply(null, allVals);
+  var axMax = Math.max.apply(null, allVals);
+  if (ratio) { axMin = Math.min(axMin, 0.5); axMax = Math.max(axMax, 2.0); }
+  else { axMin = Math.min(axMin, -1); axMax = Math.max(axMax, 1); }
+
+  function xPos(v) { return margin.l + (v-axMin)/(axMax-axMin)*plotW; }
+
+  // Null line
+  var nullX = xPos(ratio ? 1 : 0);
+  ctx.strokeStyle = tc.border; ctx.setLineDash([4,4]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(nullX, margin.t); ctx.lineTo(nullX, H-margin.b); ctx.stroke();
+  ctx.setLineDash([]);
+
+  var curRow = 0;
+  subgroupResults.forEach(function(sgr, si){
+    var color = Object.values(DIM_COLORS)[si % 11];
+
+    // Section header
+    var headerY = margin.t + curRow*rowH + rowH/2;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(escapeHtmlCanvas(sgr.label), 4, headerY+4);
+
+    // BG band
+    ctx.fillStyle = color + '0f';
+    ctx.fillRect(0, margin.t+curRow*rowH, W, rowH);
+    curRow++;
+
+    // Studies
+    sgr.studies.forEach(function(s){
+      var y = margin.t + curRow*rowH + rowH/2;
+      var xL = xPos(s.lower); var xR = xPos(s.upper); var xE = xPos(s.effect);
+
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(xL,y); ctx.lineTo(xR,y); ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(xL,y-4); ctx.lineTo(xL,y+4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xR,y-4); ctx.lineTo(xR,y+4); ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(xE,y,4,0,Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = tc.text;
+      ctx.font = '12px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(s.name, margin.l-8, y+4);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = tc.text2;
+      ctx.font = '11px monospace';
+      ctx.fillText(s.effect.toFixed(2), W-margin.r+4, y+4);
+      curRow++;
+    });
+
+    // Pooled diamond
+    if (sgr.pool) {
+      var yi = margin.t + curRow*rowH + rowH/2;
+      var xL = xPos(sgr.pool.lower); var xR = xPos(sgr.pool.upper); var xE = xPos(sgr.pool.effect);
+      var dH = 9;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(xE,yi-dH); ctx.lineTo(xR,yi); ctx.lineTo(xE,yi+dH); ctx.lineTo(xL,yi); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = tc.text;
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('Pooled ' + escapeHtmlCanvas(sgr.label), margin.l-8, yi+4);
+      ctx.font = '11px monospace';
+      ctx.fillStyle = tc.text2;
+      ctx.textAlign = 'left';
+      ctx.fillText(sgr.pool.effect.toFixed(2) + ' I²=' + sgr.pool.I2.toFixed(0) + '%', W-margin.r+4, yi+4);
+      curRow++;
+    }
+  });
+
+  // Axis
+  var tickVals = axisTickVals(axMin, axMax, ratio);
+  ctx.fillStyle = tc.text2; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  tickVals.forEach(function(v){
+    var x = xPos(v);
+    ctx.strokeStyle = tc.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x,margin.t); ctx.lineTo(x,H-margin.b); ctx.stroke();
+    ctx.fillStyle = tc.text2;
+    ctx.fillText(ratio ? v.toFixed(2) : v.toFixed(1), x, H-margin.b+16);
+  });
+  ctx.fillStyle = tc.text;
+  ctx.font = 'bold 13px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Stratified Forest — ' + (DIM_LABELS[dim]||dim), margin.l, 20);
+}
+
+function drawGapPlot(id, subgroupResults, interaction, effectType, labels) {
+  var obj = setupCanvas(id);
+  if (!obj || subgroupResults.length < 2) return;
+  var ctx = obj.ctx; var W = obj.W; var tc = obj.tc;
+  var ratio = isRatioMeasure(effectType);
+
+  var margin = {l:120, r:80, t:50, b:80};
+  var plotW = W - margin.l - margin.r;
+  var barH = 22;
+  var pairs = [];
+
+  // Build pairs
+  for (var i=0; i<subgroupResults.length-1; i++) {
+    for (var j=i+1; j<subgroupResults.length; j++) {
+      var a = subgroupResults[i]; var b = subgroupResults[j];
+      if (!a.pool || !b.pool) continue;
+      var diff, diffLo, diffHi;
+      if (ratio) {
+        var logDiff = a.pool.thetaRE - b.pool.thetaRE;
+        var seDiff = Math.sqrt(a.pool.seRE*a.pool.seRE + b.pool.seRE*b.pool.seRE);
+        diff = Math.exp(logDiff); diffLo = Math.exp(logDiff-1.96*seDiff); diffHi = Math.exp(logDiff+1.96*seDiff);
+      } else {
+        diff = a.pool.thetaRE - b.pool.thetaRE;
+        var seDiff2 = Math.sqrt(a.pool.seRE*a.pool.seRE + b.pool.seRE*b.pool.seRE);
+        diffLo = diff - 1.96*seDiff2; diffHi = diff + 1.96*seDiff2;
+      }
+      pairs.push({label: a.label + ' vs ' + b.label, diff:diff, diffLo:diffLo, diffHi:diffHi});
+    }
+  }
+
+  if (!pairs.length) return;
+  var H = margin.t + pairs.length*(barH+20) + margin.b + 60;
+  obj.canvas.height = H; ctx.fillStyle = tc.bg; ctx.fillRect(0,0,W,H);
+
+  // Axis range
+  var allVals = [];
+  pairs.forEach(function(p){ allVals.push(p.diffLo, p.diffHi); });
+  var axMin = Math.min.apply(null, allVals);
+  var axMax = Math.max.apply(null, allVals);
+  var nullVal = ratio ? 1 : 0;
+  axMin = Math.min(axMin, nullVal-(axMax-axMin)*0.2);
+  axMax = Math.max(axMax, nullVal+(axMax-axMin)*0.2);
+  if (ratio) { axMin = Math.min(axMin,0.5); axMax = Math.max(axMax,2.0); }
+
+  function xPos(v) { return margin.l + (v-axMin)/(axMax-axMin)*plotW; }
+
+  var nullX = xPos(nullVal);
+  ctx.strokeStyle = tc.border; ctx.setLineDash([4,4]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(nullX, margin.t); ctx.lineTo(nullX, H-margin.b); ctx.stroke();
+  ctx.setLineDash([]);
+
+  pairs.forEach(function(p, i){
+    var y = margin.t + i*(barH+20) + barH/2 + 10;
+    var xL = xPos(p.diffLo); var xR = xPos(p.diffHi); var xE = xPos(p.diff);
+    var sig = !(p.diffLo <= nullVal && p.diffHi >= nullVal);
+    var color = sig ? '#ef4444' : tc.teal;
+
+    // CI bar
+    ctx.fillStyle = color + '30';
+    ctx.fillRect(Math.min(xL,xE), y-barH/2+2, Math.abs(xR-xL), barH-4);
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xL,y); ctx.lineTo(xR,y); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xL,y-8); ctx.lineTo(xL,y+8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xR,y-8); ctx.lineTo(xR,y+8); ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(xE,y,5,0,Math.PI*2); ctx.fill();
+
+    // Label
+    ctx.fillStyle = tc.text;
+    ctx.font = '12px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(p.label, margin.l-10, y+4);
+
+    // Value
+    ctx.textAlign = 'left';
+    ctx.fillStyle = tc.text2;
+    ctx.font = '11px monospace';
+    ctx.fillText(p.diff.toFixed(2) + ' (' + p.diffLo.toFixed(2) + '–' + p.diffHi.toFixed(2) + ')', xR+8, y+4);
+  });
+
+  // Axis ticks
+  var tickVals = axisTickVals(axMin, axMax, ratio);
+  ctx.fillStyle = tc.text2; ctx.font = '11px -apple-system, sans-serif'; ctx.textAlign = 'center';
+  tickVals.forEach(function(v){
+    var x = xPos(v);
+    ctx.strokeStyle = tc.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x,margin.t); ctx.lineTo(x,H-margin.b); ctx.stroke();
+    ctx.fillStyle = tc.text2;
+    ctx.fillText(ratio ? v.toFixed(2) : v.toFixed(1), x, H-margin.b+16);
+  });
+
+  ctx.fillStyle = tc.text;
+  ctx.font = 'bold 13px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Equity Gap Plot — ' + (ratio ? 'Ratio of Effects' : 'Difference in Effects'), margin.l, 28);
+  ctx.font = '12px -apple-system, sans-serif';
+  ctx.fillStyle = tc.text2;
+  ctx.textAlign = 'center';
+  ctx.fillText(ratio ? effectType + ' ratio' : effectType + ' difference', margin.l+plotW/2, H-margin.b+34);
+  if (interaction) {
+    ctx.fillText('Interaction: Q=' + interaction.Qbetween.toFixed(2) + ', p=' + interaction.pBetween.toFixed(3), margin.l+plotW/2, H-margin.b+50);
+  }
+}
+
+function drawHeatmap(id, studies) {
+  var obj = setupCanvas(id);
+  if (!obj || !studies.length) return;
+  var ctx = obj.ctx; var W = obj.W; var tc = obj.tc;
+
+  var dims = DIMS;
+  var margin = {l:150, r:20, t:60, b:20};
+  var cellW = Math.floor((W - margin.l - margin.r) / dims.length);
+  var cellH = 26;
+  var H = margin.t + studies.length*cellH + margin.b + 30;
+  obj.canvas.height = H; ctx.fillStyle = tc.bg; ctx.fillRect(0,0,W,H);
+
+  // Column headers (rotated)
+  ctx.fillStyle = tc.text2;
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  dims.forEach(function(dim, j){
+    var x = margin.l + j*cellW + cellW/2;
+    ctx.save();
+    ctx.translate(x, margin.t-4);
+    ctx.rotate(-Math.PI/4);
+    ctx.fillText(dim, 0, 0);
+    ctx.restore();
+  });
+
+  // Rows
+  studies.forEach(function(s, i){
+    var y = margin.t + i*cellH;
+    ctx.fillStyle = tc.text;
+    ctx.font = '12px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(s.name, margin.l-6, y+cellH/2+4);
+
+    dims.forEach(function(dim, j){
+      var x = margin.l + j*cellW;
+      var hasDim = s.subgroups.some(function(sg){return sg.dim===dim;});
+      ctx.fillStyle = hasDim ? DIM_COLORS[dim] : tc.surface2;
+      ctx.strokeStyle = tc.bg;
+      ctx.lineWidth = 1;
+      ctx.fillRect(x+1, y+2, cellW-2, cellH-4);
+      ctx.strokeRect(x+1, y+2, cellW-2, cellH-4);
+    });
+  });
+
+  // Legend
+  ctx.fillStyle = tc.text2;
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Colored = data reported', margin.l, H-4);
+
+  ctx.fillStyle = tc.text;
+  ctx.font = 'bold 13px -apple-system, sans-serif';
+  ctx.fillText('Reporting Heatmap', margin.l, margin.t-52);
+}
+
+function escapeHtmlCanvas(s) { return String(s||''); }
+
+// ================================================================
+// PRISMA-E CHECKLIST
+// ================================================================
+function renderPrisma() {
+  var body = document.getElementById('prisma-checklist-body');
+  var sections = {};
+  PRISMA_ITEMS.forEach(function(item){
+    if (!sections[item.section]) sections[item.section] = [];
+    sections[item.section].push(item);
+  });
+
+  var html = '';
+  Object.keys(sections).forEach(function(sec){
+    html += '<div class="checklist-section"><div class="checklist-section-title">' + escHtml(sec) + '</div>';
+    sections[sec].forEach(function(item){
+      var checked = state.prismaChecked[item.id] ? true : false;
+      html += '<div class="checklist-item' + (checked?' checked':'') + '" id="ci-' + item.id + '">' +
+        '<input type="checkbox" id="chk-' + item.id + '"' + (checked?' checked':'') + ' onchange="togglePrismaItem(\'' + item.id + '\')">' +
+        '<div class="checklist-item-body">' +
+          '<div class="item-id">' + escHtml(item.id) + '</div>' +
+          '<div class="item-text">' + escHtml(item.text) + '</div>' +
+          '<div class="item-guide">' + escHtml(item.guide) + '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+  });
+  body.innerHTML = html;
+  updatePrismaProgress();
+}
+
+function togglePrismaItem(id) {
+  state.prismaChecked[id] = document.getElementById('chk-'+id).checked;
+  var el = document.getElementById('ci-'+id);
+  if (el) el.className = 'checklist-item' + (state.prismaChecked[id] ? ' checked' : '');
+  saveState();
+  updatePrismaProgress();
+}
+
+function updatePrismaProgress() {
+  var total = PRISMA_ITEMS.length;
+  var done = Object.values(state.prismaChecked).filter(Boolean).length;
+  var pct = Math.round(done/total*100);
+  document.getElementById('prisma-progress-bar').style.width = pct+'%';
+  document.getElementById('prisma-progress-text').textContent = done + ' / ' + total + ' items';
+  document.getElementById('prisma-pct-label').textContent = pct + '%';
+  var bar = document.getElementById('prisma-progress-bar');
+  bar.className = 'progress-bar' + (pct >= 75 ? '' : pct >= 50 ? ' amber' : ' coral');
+}
+
+function autoFillPrisma() {
+  var dims = getAvailableDims();
+  var total = state.studies.length;
+
+  // I2: Identify equity populations
+  if (dims.length > 0) state.prismaChecked['I2'] = true;
+  // R2: characteristics reported
+  if (total > 0) state.prismaChecked['R2'] = true;
+  // R3: completeness
+  if (total > 0) state.prismaChecked['R3'] = true;
+  // R5: disaggregated data
+  var hasAnySubgroup = state.studies.some(function(s){return s.subgroups.length>0;});
+  if (hasAnySubgroup) state.prismaChecked['R5'] = true;
+  // R6: interaction test — if we have dims with 2+ subgroups
+  var hasInteraction = dims.some(function(d){
+    var lbls = {};
+    state.studies.forEach(function(s){
+      s.subgroups.forEach(function(sg){if(sg.dim===d)lbls[sg.label]=true;});
+    });
+    return Object.keys(lbls).length >= 2;
+  });
+  if (hasInteraction) state.prismaChecked['R6'] = true;
+
+  renderPrisma();
+  showNotif('Auto-filled ' + Object.values(state.prismaChecked).filter(Boolean).length + ' items based on data');
+}
+
+function exportPrisma() {
+  var lines = ['PRISMA-Equity 2012 Checklist', '================================', ''];
+  var sections = {};
+  PRISMA_ITEMS.forEach(function(item){
+    if (!sections[item.section]) sections[item.section] = [];
+    sections[item.section].push(item);
+  });
+  Object.keys(sections).forEach(function(sec){
+    lines.push(sec.toUpperCase());
+    lines.push('-'.repeat(30));
+    sections[sec].forEach(function(item){
+      var status = state.prismaChecked[item.id] ? '[X]' : '[ ]';
+      lines.push(status + ' ' + item.id + ': ' + item.text);
+    });
+    lines.push('');
+  });
+  var done = Object.values(state.prismaChecked).filter(Boolean).length;
+  lines.push('Total: ' + done + ' / ' + PRISMA_ITEMS.length + ' items (' + Math.round(done/PRISMA_ITEMS.length*100) + '%)');
+
+  var blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PRISMA-E-checklist.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+
+// ================================================================
+// EXPORT
+// ================================================================
+function exportCsvData() {
+  var lines = ['study,year,effect_type,effect,lower,upper,n,dimension,subgroup_label,sg_effect,sg_lower,sg_upper,sg_n'];
+  state.studies.forEach(function(s){
+    if (s.subgroups.length === 0) {
+      lines.push([s.name,s.year,s.effectType,s.effect,s.lower,s.upper,s.n||'','','','','','',''].join(','));
+    } else {
+      s.subgroups.forEach(function(sg){
+        lines.push([s.name,s.year,s.effectType,s.effect,s.lower,s.upper,s.n||'',sg.dim,sg.label,sg.effect,sg.lower,sg.upper,sg.n||''].join(','));
+      });
+    }
+  });
+  var blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'equityma-data.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+
+function saveForestPng() {
+  var canvas = document.getElementById('canvas-stratified');
+  if (!canvas) { showNotif('Run analysis first'); return; }
+  var a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'equityma-forest.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function saveGapPng() {
+  var canvas = document.getElementById('canvas-gap');
+  if (!canvas) { showNotif('Run analysis first'); return; }
+  var a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'equityma-gap.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function exportHtmlReport() {
+  var dims = getAvailableDims();
+  var dim = state.selectedDim || (dims.length ? dims[0] : null);
+  var overallPool = state.studies.length ? pooledEffects(state.studies, state.studies[0].effectType) : null;
+
+  var prismaLines = PRISMA_ITEMS.map(function(item){
+    return '<tr><td>' + item.id + '</td><td>' + (state.prismaChecked[item.id] ? '&#9989;' : '&#9744;') + '</td><td>' + item.text + '</td></tr>';
+  }).join('');
+
+  var studyRows = state.studies.map(function(s){
+    return '<tr><td>'+s.name+'</td><td>'+s.year+'</td><td>'+s.effectType+'</td><td>'+s.effect.toFixed(2)+'</td><td>'+s.lower.toFixed(2)+'</td><td>'+s.upper.toFixed(2)+'</td><td>'+(s.n||'—')+'</td><td>'+s.subgroups.length+'</td></tr>';
+  }).join('');
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EquityMA Report</title>' +
+  '<style>body{font-family:sans-serif;max-width:900px;margin:40px auto;color:#1e293b}h1{color:#0d9488}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{padding:8px;border:1px solid #e2e8f0;text-align:left}th{background:#f8fafc;font-weight:600}tr:nth-child(even){background:#f8fafc}</style>' +
+  '</head><body>' +
+  '<h1>EquityMA — Equity-Stratified Meta-Analysis Report</h1>' +
+  '<p>Generated: ' + new Date().toLocaleDateString() + ' | Studies: ' + state.studies.length + ' | PROGRESS-Plus dimensions: ' + dims.length + '</p>' +
+  '<h2>Included Studies</h2>' +
+  '<table><tr><th>Study</th><th>Year</th><th>Type</th><th>Effect</th><th>Lower</th><th>Upper</th><th>N</th><th>Subgroups</th></tr>' + studyRows + '</table>' +
+  (overallPool ? '<h2>Overall Pooled Effect</h2><p><strong>' + (state.studies[0].effectType) + ' = ' + overallPool.effect.toFixed(2) + '</strong> (95% CI: ' + overallPool.lower.toFixed(2) + '–' + overallPool.upper.toFixed(2) + '), I² = ' + overallPool.I2.toFixed(0) + '%, tau² = ' + overallPool.tau2.toFixed(4) + '</p>' : '') +
+  '<h2>PRISMA-Equity Checklist</h2>' +
+  '<table><tr><th>ID</th><th>Status</th><th>Item</th></tr>' + prismaLines + '</table>' +
+  '</body></html>';
+
+  var blob = new Blob([html], {type:'text/html'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'equityma-report.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+
+// ================================================================
+// BUILT-IN EXAMPLES
+// ================================================================
+function loadExample(idx) {
+  state.studies = [];
+  studyIdCounter = 1;
+  pendingSubgroups = [];
+
+  if (idx === 0) loadExampleSex();
+  else if (idx === 1) loadExampleSES();
+  else if (idx === 2) loadExampleLIC();
+
+  saveState();
+  renderStudiesTable();
+  renderCoverage();
+  state.selectedDim = null;
+  showNotif('Loaded example dataset');
+}
+
+function loadExampleSex() {
+  var data = [
+    {name:'HOPE 2000', year:2000, ef:0.78, lo:0.62, hi:0.98, n:3577, fEf:0.71, fLo:0.55, fHi:0.92, fN:1710, mEf:0.86, mLo:0.64, mHi:1.15, mN:1867},
+    {name:'EUROPA 2003', year:2003, ef:0.80, lo:0.71, hi:0.91, n:12218, fEf:0.74, fLo:0.61, fHi:0.90, fN:5850, mEf:0.86, mLo:0.73, mHi:1.01, mN:6368},
+    {name:'PROGRESS 2001', year:2001, ef:0.82, lo:0.72, hi:0.94, n:6105, fEf:0.75, fLo:0.62, fHi:0.91, fN:2900, mEf:0.90, mLo:0.74, mHi:1.09, mN:3205},
+    {name:'ASCOT-BPLA 2005', year:2005, ef:0.89, lo:0.79, hi:1.00, n:19257, fEf:0.81, fLo:0.67, fHi:0.98, fN:9378, mEf:0.95, mLo:0.82, mHi:1.10, mN:9879},
+    {name:'ALLHAT 2002', year:2002, ef:0.96, lo:0.89, hi:1.04, n:33357, fEf:0.93, fLo:0.84, fHi:1.04, fN:16200, mEf:0.99, mLo:0.88, mHi:1.11, mN:17157},
+    {name:'CAPPP 1999', year:1999, ef:1.05, lo:0.90, hi:1.22, n:10985, fEf:0.97, fLo:0.78, fHi:1.21, fN:5200, mEf:1.12, mLo:0.91, mHi:1.38, mN:5785},
+    {name:'STOP-2 1999', year:1999, ef:0.98, lo:0.84, hi:1.15, n:6614, fEf:0.92, fLo:0.75, fHi:1.13, fN:3100, mEf:1.05, mLo:0.83, mHi:1.33, mN:3514},
+    {name:'NORDIL 2000', year:2000, ef:1.00, lo:0.87, hi:1.15, n:10881, fEf:0.94, fLo:0.77, fHi:1.15, fN:5200, mEf:1.06, mLo:0.87, mHi:1.29, mN:5681},
+    {name:'INVEST 2003', year:2003, ef:0.99, lo:0.91, hi:1.07, n:22576, fEf:0.96, fLo:0.86, fHi:1.07, fN:11000, mEf:1.02, mLo:0.90, mHi:1.16, mN:11576},
+    {name:'VALUE 2004', year:2004, ef:1.04, lo:0.94, hi:1.15, n:15245, fEf:0.98, fLo:0.84, fHi:1.14, fN:7300, mEf:1.10, mLo:0.95, mHi:1.27, mN:7945},
+    {name:'LIFE 2002', year:2002, ef:0.87, lo:0.77, hi:0.98, n:9193, fEf:0.81, fLo:0.68, fHi:0.96, fN:4400, mEf:0.93, mLo:0.78, mHi:1.11, mN:4793},
+    {name:'ACCOMPLISH 2008', year:2008, ef:0.80, lo:0.72, hi:0.90, n:11506, fEf:0.74, fLo:0.63, fHi:0.87, fN:5500, mEf:0.87, mLo:0.74, mHi:1.02, mN:6006}
+  ];
+  data.forEach(function(d){
+    state.studies.push({id:studyIdCounter++, name:d.name, year:d.year, effectType:'RR', effect:d.ef, lower:d.lo, upper:d.hi, n:d.n,
+      subgroups:[
+        {dim:'Gender', label:'Female', effect:d.fEf, lower:d.fLo, upper:d.fHi, n:d.fN},
+        {dim:'Gender', label:'Male', effect:d.mEf, lower:d.mLo, upper:d.mHi, n:d.mN}
+      ]
+    });
+  });
+  state.selectedDim = 'Gender';
+}
+
+function loadExampleSES() {
+  var data = [
+    {name:'HPS 2002', year:2002, ef:0.75, lo:0.69, hi:0.81, n:20536, lEf:0.72, lLo:0.64, lHi:0.81, lN:8500, hEf:0.78, hLo:0.70, hHi:0.87, hN:12036},
+    {name:'4S 1994', year:1994, ef:0.66, lo:0.59, hi:0.75, n:4444, lEf:0.61, lLo:0.51, lHi:0.73, lN:2000, hEf:0.71, hLo:0.60, hHi:0.84, hN:2444},
+    {name:'WOSCOPS 1995', year:1995, ef:0.69, lo:0.57, hi:0.83, n:6595, lEf:0.65, lLo:0.51, lHi:0.83, lN:3000, hEf:0.73, hLo:0.55, hHi:0.97, hN:3595},
+    {name:'CARE 1996', year:1996, ef:0.76, lo:0.64, hi:0.91, n:4159},
+    {name:'LIPID 1998', year:1998, ef:0.76, lo:0.65, hi:0.88, n:9014, lEf:0.71, lLo:0.58, lHi:0.87, lN:4200, hEf:0.81, hLo:0.66, hHi:0.99, hN:4814},
+    {name:'AFCAPS/TexCAPS 1998', year:1998, ef:0.63, lo:0.50, hi:0.79, n:6605},
+    {name:'ASCOT-LLA 2003', year:2003, ef:0.64, lo:0.50, hi:0.83, n:10305, lEf:0.59, lLo:0.43, lHi:0.81, lN:4900, hEf:0.70, hLo:0.50, hHi:0.98, hN:5405},
+    {name:'TNT 2005', year:2005, ef:0.78, lo:0.69, hi:0.89, n:10001, lEf:0.75, lLo:0.63, lHi:0.89, lN:4700, hEf:0.82, hLo:0.69, hHi:0.97, hN:5301}
+  ];
+  data.forEach(function(d){
+    var sgs = [];
+    if (d.lEf) { sgs.push({dim:'SES',label:'Low SES',effect:d.lEf,lower:d.lLo,upper:d.lHi,n:d.lN}); }
+    if (d.hEf) { sgs.push({dim:'SES',label:'High SES',effect:d.hEf,lower:d.hLo,upper:d.hHi,n:d.hN}); }
+    state.studies.push({id:studyIdCounter++, name:d.name, year:d.year, effectType:'RR', effect:d.ef, lower:d.lo, upper:d.hi, n:d.n, subgroups:sgs});
+  });
+  state.selectedDim = 'SES';
+}
+
+function loadExampleLIC() {
+  var data = [
+    {name:'GAVI RTS,S Phase 3 HIC', year:2011, ef:0.44, lo:0.38, hi:0.50, n:8922, place:'Place', label:'High-Income', n2:8922},
+    {name:'GAVI RTS,S Phase 3 LIC', year:2011, ef:0.34, lo:0.28, hi:0.41, n:6537, place:'Place', label:'Low-Income', n2:6537},
+    {name:'MVA085A UK', year:2013, ef:0.85, lo:0.72, hi:1.00, n:2784},
+    {name:'ChAd-MVA Kenya', year:2013, ef:0.67, lo:0.55, hi:0.82, n:1560},
+    {name:'BCG Norway 1949', year:1949, ef:0.20, lo:0.13, hi:0.32, n:53047},
+    {name:'BCG GB/Canada', year:1977, ef:0.24, lo:0.18, hi:0.31, n:56681},
+    {name:'BCG Georgia', year:1950, ef:1.09, lo:0.93, hi:1.27, n:17854},
+    {name:'BCG South Africa', year:1965, ef:0.31, lo:0.22, hi:0.45, n:7761},
+    {name:'BCG Puerto Rico', year:1955, ef:0.78, lo:0.62, hi:0.98, n:50634},
+    {name:'BCG Malawi', year:1996, ef:0.99, lo:0.89, hi:1.10, n:121557},
+    {name:'OCV Matlab', year:1985, ef:0.50, lo:0.39, hi:0.64, n:89596},
+    {name:'OCV Mozambique', year:2015, ef:0.56, lo:0.42, hi:0.75, n:209302},
+    {name:'OCV Bangladesh', year:2009, ef:0.63, lo:0.48, hi:0.82, n:63828},
+    {name:'OCV Haiti', year:2014, ef:0.68, lo:0.47, hi:0.99, n:37466},
+    {name:'OCV Zambia', year:2018, ef:0.69, lo:0.56, hi:0.86, n:56920}
+  ];
+  var hicStudies = ['GAVI RTS,S Phase 3 HIC','MVA085A UK','BCG Norway 1949','BCG GB/Canada','BCG Georgia','BCG Puerto Rico','OCV Bangladesh'];
+  var licStudies = ['GAVI RTS,S Phase 3 LIC','ChAd-MVA Kenya','BCG South Africa','BCG Malawi','OCV Matlab','OCV Mozambique','OCV Haiti','OCV Zambia'];
+  data.forEach(function(d){
+    var sgs = [];
+    if (hicStudies.indexOf(d.name) >= 0) {
+      sgs.push({dim:'Place',label:'High-Income Country',effect:d.ef,lower:d.lo,upper:d.hi,n:d.n});
+    } else if (licStudies.indexOf(d.name) >= 0) {
+      sgs.push({dim:'Place',label:'Low-Income Country',effect:d.ef,lower:d.lo,upper:d.hi,n:d.n});
+    }
+    state.studies.push({id:studyIdCounter++, name:d.name, year:d.year, effectType:'RR', effect:d.ef, lower:d.lo, upper:d.hi, n:d.n, subgroups:sgs});
+  });
+  state.selectedDim = 'Place';
+}
+
+function clearAllData() {
+  if (!confirm('Clear all data?')) return;
+  state.studies = [];
+  state.prismaChecked = {};
+  state.selectedDim = null;
+  pendingSubgroups = [];
+  saveState();
+  renderStudiesTable();
+  renderCoverage();
+  document.getElementById('analysis-content').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);">Add studies with subgroup data, then select a dimension above to analyze.</div>';
+  document.getElementById('dim-pills-analysis').innerHTML = '';
+  showNotif('All data cleared');
+}
+
+// ================================================================
+// INIT
+// ================================================================
+function init() {
+  loadState();
+  renderStudiesTable();
+  renderCoverage();
+  renderPrisma();
+  // Load example if empty
+  if (state.studies.length === 0) {
+    loadExample(0);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
