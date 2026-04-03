@@ -504,7 +504,13 @@ function loadState() {
     var s = localStorage.getItem('equityma_state_v1');
     if (s) {
       var d = JSON.parse(s);
-      if (d.studies) state.studies = d.studies;
+      if (d.studies) {
+        state.studies = d.studies;
+        // Ensure studyIdCounter exceeds all existing IDs to avoid duplicates
+        var maxId = 0;
+        d.studies.forEach(function(st) { if (st.id > maxId) maxId = st.id; });
+        studyIdCounter = maxId + 1;
+      }
       if (d.prismaChecked) state.prismaChecked = d.prismaChecked;
       if (d.darkMode) { state.darkMode = true; document.body.classList.add('dark'); }
     }
@@ -544,6 +550,11 @@ function toggleCsvPane() {
 function escHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function truncLabel(s, maxLen) {
+  if (!s || s.length <= maxLen) return s;
+  return s.substring(0, maxLen - 1) + '\u2026';
 }
 
 function fmtEffect(e, lo, hi) {
@@ -709,14 +720,18 @@ function importCsv() {
   var added = 0;
   var studyMap = {};
 
-  lines.forEach(function(line){
+  lines.forEach(function(line, idx){
     line = line.trim();
     if (!line) return;
     var parts = line.split(',');
     if (parts.length < 4) return;
     var name = parts[0].trim();
+    // Skip header row if detected
+    if (idx === 0 && /^(study|name|author)/i.test(name) && isNaN(parseFloat(parts[3]))) return;
     var year = parseInt(parts[1]) || null;
-    var effectType = (parts[2]||'RR').trim();
+    var effectType = (parts[2]||'RR').trim().toUpperCase();
+    var validTypes = ['RR','OR','HR','MD','SMD'];
+    if (validTypes.indexOf(effectType) < 0) effectType = 'RR';
     var effect = parseFloat(parts[3]);
     var lower = parseFloat(parts[4]);
     var upper = parseFloat(parts[5]);
@@ -779,8 +794,8 @@ function dlMeta(ys, vis, effectType) {
     return {effect:e, lower:lo, upper:hi, tau2:0, I2:0, Q:0, df:0, pQ:1, k:1, weights:[1]};
   }
 
-  // Fixed-effects
-  var ws = vis.map(function(v){ return 1/v; });
+  // Fixed-effects — guard against zero variance (SE=0) producing Infinity weights
+  var ws = vis.map(function(v){ return v > 0 ? 1/v : 1e12; });
   var W = ws.reduce(function(a,b){return a+b;},0);
   var W2 = ws.reduce(function(a,b){return a+b*b;},0);
   var thetaFE = ws.reduce(function(acc,w,i){return acc+w*ys[i];},0)/W;
@@ -1104,7 +1119,7 @@ function drawOverallForest(id, studies, overall, effectType) {
     ctx.fillStyle = tc.text;
     ctx.font = '12px -apple-system, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(s.name, margin.l-8, y+4);
+    ctx.fillText(truncLabel(s.name, 18), margin.l-8, y+4);
 
     // Effect value
     ctx.textAlign = 'left';
@@ -1435,7 +1450,7 @@ function drawHeatmap(id, studies) {
     dims.forEach(function(dim, j){
       var x = margin.l + j*cellW;
       var hasDim = s.subgroups.some(function(sg){return sg.dim===dim;});
-      ctx.fillStyle = hasDim ? DIM_COLORS[dim] : tc.surface2;
+      ctx.fillStyle = hasDim ? DIM_COLORS[dim] : tc.bg;
       ctx.strokeStyle = tc.bg;
       ctx.lineWidth = 1;
       ctx.fillRect(x+1, y+2, cellW-2, cellH-4);

@@ -21,6 +21,7 @@ File ends with `</script></body>` but no `</html>`.
 ### P1-1: DerSimonian-Laird Q division by zero when k=1
 **Lines:** 770-779
 When k=1, the single-study path returns correctly. But the `dlMeta` function calculates `Q` and `W2/W` which could be NaN if a single study has SE=0 (variance=0, weight=Infinity).
+**Status:** FIXED — guard zero variance with cap at 1e12
 
 ### P1-2: I2 calculation can produce NaN when Q=0
 **Line:** 799
@@ -30,6 +31,7 @@ When k=1, the single-study path returns correctly. But the `dlMeta` function cal
 ### P1-3: CSV import does not validate effect type
 **Lines:** 705-749
 CSV import accepts any string for `effectType` without validation. Invalid types like "XYZ" would pass through silently.
+**Status:** FIXED — validate against [RR,OR,HR,MD,SMD]; default to RR
 
 ### P1-4: `prompt()` usage for editing is not accessible
 Functions like `editIntervention` in EvidenceMap use `prompt()` which blocks the UI and is not keyboard-accessible in some screen readers.
@@ -43,17 +45,21 @@ Functions like `editIntervention` in EvidenceMap use `prompt()` which blocks the
 ### P2-1: Heatmap canvas colors use undefined `tc.surface2`
 **Line:** 1438
 `ctx.fillStyle = hasDim ? DIM_COLORS[dim] : tc.surface2` — `tc` object doesn't have `surface2` property; it has `bg`, `text`, `text2`, `border`, `teal`, `coral`, `amber`, `grid`. Should use `tc.bg` or similar.
+**Status:** FIXED — changed to tc.bg
 
 ### P2-2: `studyIdCounter` resets on page reload with non-empty localStorage
 **Line:** 557
 `studyIdCounter = 1` at init, but loaded studies may have IDs > 1. New studies could get duplicate IDs.
+**Status:** FIXED — loadState now sets studyIdCounter = max(existing IDs) + 1
 
 ### P2-3: No feedback when CSV has header row
 The CSV format documentation mentions no header row, but users may paste with headers.
+**Status:** FIXED — CSV import auto-skips header row if first column matches /study|name|author/i and column 4 is non-numeric
 
 ### P2-4: Forest plot axis labels overlap for small studies
 When study names are long (>15 chars), they overlap with the plot area margin.
+**Status:** FIXED — added truncLabel() helper, truncates at 18 chars with ellipsis
 
 ---
 
-**Summary:** 2 P0 fixed, 5 P1 found (1 fixed), 4 P2 found
+**Summary:** 2 P0 fixed, 5 P1 found (3 fixed), 4 P2 fixed. 50/50 tests pass.
