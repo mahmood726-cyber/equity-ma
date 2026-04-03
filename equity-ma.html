@@ -796,7 +796,7 @@ function dlMeta(ys, vis, effectType) {
   var WRE = wsRE.reduce(function(a,b){return a+b;},0);
   var thetaRE = wsRE.reduce(function(acc,w,i){return acc+w*ys[i];},0)/WRE;
   var seRE = Math.sqrt(1/WRE);
-  var I2 = Math.max(0, (Q-df)/Q*100);
+  var I2 = Q > 0 ? Math.max(0, (Q-df)/Q*100) : 0;
 
   var ratio = isRatioMeasure(effectType);
   var effect = ratio ? Math.exp(thetaRE) : thetaRE;
@@ -1565,14 +1565,20 @@ function exportPrisma() {
 // ================================================================
 // EXPORT
 // ================================================================
+function csvSafe(v) {
+  var s = String(v == null ? '' : v);
+  if (/^[=+@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
 function exportCsvData() {
   var lines = ['study,year,effect_type,effect,lower,upper,n,dimension,subgroup_label,sg_effect,sg_lower,sg_upper,sg_n'];
   state.studies.forEach(function(s){
     if (s.subgroups.length === 0) {
-      lines.push([s.name,s.year,s.effectType,s.effect,s.lower,s.upper,s.n||'','','','','','',''].join(','));
+      lines.push([csvSafe(s.name),s.year,s.effectType,s.effect,s.lower,s.upper,s.n||'','','','','','',''].join(','));
     } else {
       s.subgroups.forEach(function(sg){
-        lines.push([s.name,s.year,s.effectType,s.effect,s.lower,s.upper,s.n||'',sg.dim,sg.label,sg.effect,sg.lower,sg.upper,sg.n||''].join(','));
+        lines.push([csvSafe(s.name),s.year,s.effectType,s.effect,s.lower,s.upper,s.n||'',csvSafe(sg.dim),csvSafe(sg.label),sg.effect,sg.lower,sg.upper,sg.n||''].join(','));
       });
     }
   });
@@ -1771,4 +1777,5 @@ function init() {
 init();
 </script>
 </body>
+</html>
 </html>
