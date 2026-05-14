@@ -3,28 +3,52 @@ Selenium test suite for EquityMA — Equity-Stratified Meta-Analysis Tool.
 Tests statistical functions, study management, PRISMA-E checklist, CSV import,
 dimension analysis, examples, and export.
 """
-import sys, io, os, unittest, time, math
-if not hasattr(sys.stdout, '_pytest_capture'):
-    try:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    except Exception:
-        pass
+import math
+import time
+import unittest
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from threading import Thread
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
-HTML = 'file:///' + os.path.abspath(r'C:\Models\EquityMA\equity-ma.html').replace('\\', '/')
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+class QuietHTTPServer(ThreadingHTTPServer):
+    # Keep this false so parallel browser suites fall back instead of
+    # sharing 127.0.0.1:8000 on Windows.
+    allow_reuse_address = False
+    daemon_threads = True
+
+
+class QuietHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(REPO_ROOT), **kwargs)
+
+    def log_message(self, format, *args):
+        pass
 
 
 class TestEquityMA(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        try:
+            cls.server = QuietHTTPServer(("127.0.0.1", 8000), QuietHandler)
+        except OSError:
+            cls.server = QuietHTTPServer(("127.0.0.1", 0), QuietHandler)
+        cls.html = f"http://127.0.0.1:{cls.server.server_port}/equity-ma.html"
+        cls.thread = Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
         opts = Options()
         opts.add_argument('--headless=new')
         opts.add_argument('--no-sandbox')
         opts.add_argument('--disable-gpu')
         cls.drv = webdriver.Chrome(options=opts)
-        cls.drv.get(HTML)
+        cls.drv.get(cls.html)
         time.sleep(1)
         # Clear localStorage to start fresh
         cls.drv.execute_script("localStorage.clear();")
@@ -34,6 +58,9 @@ class TestEquityMA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.drv.quit()
+        cls.server.shutdown()
+        cls.thread.join(timeout=5)
+        cls.server.server_close()
 
     def js(self, script):
         return self.drv.execute_script(script)
@@ -106,11 +133,17 @@ class TestEquityMA(unittest.TestCase):
     # ---------------------------------------------------------------
     def test_10_default_example_loaded(self):
         """App should load example 0 (sex example) on init with 12 studies"""
+        self.drv.execute_script("localStorage.clear();")
+        self.drv.get(self.html)
+        time.sleep(0.5)
         count = self.js("return state.studies.length;")
         self.assertEqual(count, 12, "Default example should load 12 studies")
 
     def test_11_default_example_has_gender_subgroups(self):
         """Default example studies should have Gender subgroups"""
+        self.drv.execute_script("localStorage.clear();")
+        self.drv.get(self.html)
+        time.sleep(0.5)
         has_gender = self.js("""
             return state.studies.every(function(s){
                 return s.subgroups.some(function(sg){ return sg.dim === 'Gender'; });
@@ -241,6 +274,21 @@ class TestEquityMA(unittest.TestCase):
 
     def test_19_delete_study(self):
         """Deleting a study removes it from state"""
+        self.js("""
+            window._origConfirm = window.confirm;
+            window.confirm = function() { return true; };
+            clearAllData();
+            window.confirm = window._origConfirm;
+
+            document.getElementById('inp-study-name').value = 'DeleteMe2021';
+            document.getElementById('inp-study-year').value = '2021';
+            document.getElementById('inp-effect-type').value = 'RR';
+            document.getElementById('inp-effect').value = '0.90';
+            document.getElementById('inp-lower').value = '0.80';
+            document.getElementById('inp-upper').value = '1.01';
+            document.getElementById('inp-n').value = '300';
+            addStudy();
+        """)
         study_id = self.js("return state.studies[0].id;")
         self.js(f"deleteStudy({study_id});")
         count = self.js("return state.studies.length;")
@@ -268,7 +316,20 @@ class TestEquityMA(unittest.TestCase):
     def test_21_study_with_subgroups(self):
         """Study added with pending subgroups includes them"""
         self.js("""
-            // Keep existing pending subgroups and add study
+            window._origConfirm = window.confirm;
+            window.confirm = function() { return true; };
+            clearAllData();
+            window.confirm = window._origConfirm;
+
+            pendingSubgroups = [];
+            document.getElementById('inp-sg-dim').value = 'Gender';
+            document.getElementById('inp-sg-label').value = 'Female';
+            document.getElementById('inp-sg-effect').value = '0.75';
+            document.getElementById('inp-sg-lower').value = '0.60';
+            document.getElementById('inp-sg-upper').value = '0.93';
+            document.getElementById('inp-sg-n').value = '250';
+            addPendingSubgroup();
+
             document.getElementById('inp-study-name').value = 'SubgroupStudy';
             document.getElementById('inp-study-year').value = '2021';
             document.getElementById('inp-effect-type').value = 'RR';
@@ -432,6 +493,7 @@ class TestEquityMA(unittest.TestCase):
     def test_34_interaction_test_sex_example(self):
         """Gender interaction test from sex example produces valid Q_between"""
         result = self.js("""
+            loadExample(0);
             var femaleStudies = state.studies.map(function(s){
                 var sg = s.subgroups.find(function(g){return g.label==='Female';});
                 return sg ? {effect:sg.effect, lower:sg.lower, upper:sg.upper, n:sg.n} : null;

@@ -6,3 +6,8 @@ sentinel-findings.md
 sentinel-findings.jsonl
 review-findings.md
 review-findings.jsonl
+
+# Python test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/

@@ -233,9 +233,9 @@ tr:hover td { background: rgba(13,148,136,0.03); }
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group flex1"><label>Study Name</label><input id="inp-study-name" placeholder="Author Year" type="text"></div>
-      <div class="form-group w80"><label>Year</label><input id="inp-study-year" placeholder="2020" type="number" min="1900" max="2100"></div>
-      <div class="form-group"><label>Effect Type</label>
+      <div class="form-group flex1"><label for="inp-study-name">Study Name</label><input id="inp-study-name" placeholder="Author Year" type="text"></div>
+      <div class="form-group w80"><label for="inp-study-year">Year</label><input id="inp-study-year" placeholder="2020" type="number" min="1900" max="2100"></div>
+      <div class="form-group"><label for="inp-effect-type">Effect Type</label>
         <select id="inp-effect-type">
           <option value="RR">RR</option>
           <option value="OR">OR</option>
@@ -244,10 +244,10 @@ tr:hover td { background: rgba(13,148,136,0.03); }
           <option value="SMD">SMD</option>
         </select>
       </div>
-      <div class="form-group w80"><label>Effect</label><input id="inp-effect" placeholder="0.85" type="number" step="any"></div>
-      <div class="form-group w80"><label>Lower CI</label><input id="inp-lower" placeholder="0.72" type="number" step="any"></div>
-      <div class="form-group w80"><label>Upper CI</label><input id="inp-upper" placeholder="1.01" type="number" step="any"></div>
-      <div class="form-group w80"><label>N (opt)</label><input id="inp-n" placeholder="320" type="number" min="0"></div>
+      <div class="form-group w80"><label for="inp-effect">Effect</label><input id="inp-effect" placeholder="0.85" type="number" step="any"></div>
+      <div class="form-group w80"><label for="inp-lower">Lower CI</label><input id="inp-lower" placeholder="0.72" type="number" step="any"></div>
+      <div class="form-group w80"><label for="inp-upper">Upper CI</label><input id="inp-upper" placeholder="1.01" type="number" step="any"></div>
+      <div class="form-group w80"><label for="inp-n">N (opt)</label><input id="inp-n" placeholder="320" type="number" min="0"></div>
       <div class="form-group" style="align-self:flex-end;">
         <button class="btn btn-primary" onclick="addStudy()">Add Study</button>
       </div>
@@ -257,7 +257,7 @@ tr:hover td { background: rgba(13,148,136,0.03); }
       <div class="section-title" style="margin-top:0;">Subgroup Data (optional — add after entering study details)</div>
       <div id="pending-subgroups"></div>
       <div class="form-row" id="sg-add-row">
-        <div class="form-group"><label>PROGRESS-Plus Dimension</label>
+        <div class="form-group"><label for="inp-sg-dim">PROGRESS-Plus Dimension</label>
           <select id="inp-sg-dim">
             <option value="">-- Select Dimension --</option>
             <option value="Place">Place of Residence</option>
@@ -273,11 +273,11 @@ tr:hover td { background: rgba(13,148,136,0.03); }
             <option value="Other">Other (Plus)</option>
           </select>
         </div>
-        <div class="form-group flex1"><label>Subgroup Label</label><input id="inp-sg-label" placeholder="e.g. Female" type="text"></div>
-        <div class="form-group w80"><label>Effect</label><input id="inp-sg-effect" placeholder="0.79" type="number" step="any"></div>
-        <div class="form-group w80"><label>Lower CI</label><input id="inp-sg-lower" placeholder="0.63" type="number" step="any"></div>
-        <div class="form-group w80"><label>Upper CI</label><input id="inp-sg-upper" placeholder="0.98" type="number" step="any"></div>
-        <div class="form-group w80"><label>n</label><input id="inp-sg-n" placeholder="160" type="number" min="0"></div>
+        <div class="form-group flex1"><label for="inp-sg-label">Subgroup Label</label><input id="inp-sg-label" placeholder="e.g. Female" type="text"></div>
+        <div class="form-group w80"><label for="inp-sg-effect">Effect</label><input id="inp-sg-effect" placeholder="0.79" type="number" step="any"></div>
+        <div class="form-group w80"><label for="inp-sg-lower">Lower CI</label><input id="inp-sg-lower" placeholder="0.63" type="number" step="any"></div>
+        <div class="form-group w80"><label for="inp-sg-upper">Upper CI</label><input id="inp-sg-upper" placeholder="0.98" type="number" step="any"></div>
+        <div class="form-group w80"><label for="inp-sg-n">n</label><input id="inp-sg-n" placeholder="160" type="number" min="0"></div>
         <div class="form-group" style="align-self:flex-end;">
           <button class="btn btn-secondary" onclick="addPendingSubgroup()">+ Add Subgroup</button>
         </div>
@@ -294,7 +294,7 @@ tr:hover td { background: rgba(13,148,136,0.03); }
       Format: <code>study,year,effect_type,effect,lower,upper,n,dimension,subgroup_label,sg_effect,sg_lower,sg_upper,sg_n</code><br>
       For studies without subgroups, leave dimension onwards blank. For multiple subgroups, repeat the study row.
     </p>
-    <textarea id="csv-paste" class="form-group" placeholder="Smith 2020,2020,RR,0.85,0.72,1.01,320,Gender,Female,0.79,0.63,0.98,160&#10;Smith 2020,2020,RR,0.85,0.72,1.01,320,Gender,Male,0.92,0.74,1.14,160"></textarea>
+    <textarea id="csv-paste" class="form-group" aria-label="CSV study and subgroup data" placeholder="Smith 2020,2020,RR,0.85,0.72,1.01,320,Gender,Female,0.79,0.63,0.98,160&#10;Smith 2020,2020,RR,0.85,0.72,1.01,320,Gender,Male,0.92,0.74,1.14,160"></textarea>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="btn btn-primary" onclick="importCsv()">Import CSV</button>
       <button class="btn btn-secondary" onclick="toggleCsvPane()">Cancel</button>
@@ -1488,7 +1488,7 @@ function renderPrisma() {
     sections[sec].forEach(function(item){
       var checked = state.prismaChecked[item.id] ? true : false;
       html += '<div class="checklist-item' + (checked?' checked':'') + '" id="ci-' + item.id + '">' +
-        '<input type="checkbox" id="chk-' + item.id + '"' + (checked?' checked':'') + ' onchange="togglePrismaItem(\'' + item.id + '\')">' +
+        '<input type="checkbox" id="chk-' + item.id + '" aria-label="PRISMA-E checklist item ' + escHtml(item.id) + '"' + (checked?' checked':'') + ' onchange="togglePrismaItem(\'' + item.id + '\')">' +
         '<div class="checklist-item-body">' +
           '<div class="item-id">' + escHtml(item.id) + '</div>' +
           '<div class="item-text">' + escHtml(item.text) + '</div>' +
